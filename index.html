@@ -417,6 +417,14 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
+        
+        /* 提示文字 */
+        .payment-hint {
+            text-align: center;
+            color: #999;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -476,7 +484,7 @@
         <div id="seatsContainer" class="seats-grid"></div>
         
         <div class="footer-note">
-            <p>点击「开台」开始计时 · 结束时可选择收款方式</p>
+            <p>点击「开台」开始计时 · 结束必须选择收款方式</p>
         </div>
     </div>
 
@@ -529,11 +537,11 @@
         </div>
     </div>
 
-    <!-- 收款模态框 -->
+    <!-- 收款模态框 - 移除了跳过按钮 -->
     <div id="paymentModal" class="modal-overlay hidden">
         <div class="modal">
-            <h3>选择收款方式</h3>
-            <div id="paymentSeatInfo" style="margin-bottom:12px;"></div>
+            <h3>💰 选择收款方式</h3>
+            <div id="paymentSeatInfo" style="margin-bottom:12px; color:#5f4e43;"></div>
             <div class="payment-methods">
                 <div class="payment-option" data-payment="抖音团购">
                     <div class="payment-icon">🎵</div>
@@ -552,8 +560,11 @@
                     <div class="payment-name">微信</div>
                 </div>
             </div>
+            <div class="payment-hint">
+                👆 请选择一种收款方式
+            </div>
             <div class="modal-actions">
-                <button class="btn" id="skipPaymentBtn">跳过</button>
+                <button class="btn" id="cancelPaymentBtn">取消</button>
                 <button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button>
             </div>
         </div>
@@ -632,7 +643,6 @@
         updateSyncUI();
     }
 
-    // ========== 拉取云端数据 ==========
     async function pullFromCloud() {
         if (!gistConfig.gistId) {
             showToast('⚠️ 请先配置 Gist ID');
@@ -651,14 +661,11 @@
             
             let hasData = false;
             
-            // 拉取座位数据
             if (files['seats.json']?.content) {
                 const cloudSeats = JSON.parse(files['seats.json'].content);
-                // 合并策略：保留本地正在运行的状态
                 cloudSeats.forEach(cloudSeat => {
                     const localSeat = seats.find(s => s.id === cloudSeat.id);
                     if (localSeat && localSeat.running) {
-                        // 如果本地正在运行，保持本地状态
                         cloudSeat.running = localSeat.running;
                         cloudSeat.startTimestamp = localSeat.startTimestamp;
                         cloudSeat.accumulatedSeconds = localSeat.accumulatedSeconds;
@@ -668,10 +675,8 @@
                 hasData = true;
             }
             
-            // 拉取记录数据
             if (files['records.json']?.content) {
                 const cloudRecords = JSON.parse(files['records.json'].content);
-                // 合并去重
                 cloudRecords.forEach(r => {
                     if (!usageRecords.some(local => local.id === r.id)) {
                         usageRecords.push(r);
@@ -697,12 +702,11 @@
             console.error('拉取失败:', e);
             syncStatus = 'error';
             updateSyncUI();
-            showToast('❌ 拉取失败: ' + e.message);
+            showToast('❌ 拉取失败');
             return null;
         }
     }
 
-    // ========== 上传到云端 ==========
     async function pushToCloud() {
         if (!gistConfig.gistId) {
             showToast('⚠️ 请先配置 Gist ID');
@@ -734,12 +738,11 @@
             console.error('上传失败:', e);
             syncStatus = 'error';
             updateSyncUI();
-            showToast('❌ 上传失败: ' + e.message);
+            showToast('❌ 上传失败');
             return false;
         }
     }
 
-    // ========== 测试连接 ==========
     async function testConnection() {
         const gistId = $('gistIdInputBar').value.trim();
         if (!gistId) {
@@ -759,7 +762,6 @@
         }
     }
 
-    // ========== 座位相关函数 ==========
     function createDefaultSeat(id) {
         return {
             id, name: id + '号桌', status: 'idle', timerMode: 'countup',
@@ -870,7 +872,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
         renderAdminGrid();
-        showToast(`✅ ${seat.name} 结束 ${duration}${paymentMethod ? ' · '+paymentMethod : ''}`);
+        showToast(`✅ ${seat.name} 结束 ${duration} · ${paymentMethod}`);
     }
 
     function actionReset(seatId) {
@@ -932,7 +934,7 @@
         const seat = seats[idx];
         pendingEndSeatId = seatId;
         selectedPayment = null;
-        $('paymentSeatInfo').textContent = `${seat.name} · ${formatTime(getCurrentSeconds(seat))}`;
+        $('paymentSeatInfo').textContent = `${seat.name} · 使用时长: ${formatTime(getCurrentSeconds(seat))}`;
         document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
         $('confirmPaymentBtn').disabled = true;
         $('paymentModal').classList.remove('hidden');
@@ -1039,7 +1041,7 @@
         list.innerHTML = dayRecords.map(r => `
             <div class="record-item">
                 <strong>${r.seatName}</strong> · ${r.duration}<br>
-                <span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()}${r.paymentMethod ? ' · '+r.paymentMethod : ''}</span>
+                <span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod || ''}</span>
             </div>
         `).join('');
     }
@@ -1120,6 +1122,7 @@
             applyFilter();
         });
 
+        // 收款方式选择
         document.querySelectorAll('.payment-option').forEach(opt => {
             opt.onclick = () => {
                 document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
@@ -1129,6 +1132,7 @@
             };
         });
 
+        // 确认结束（必须选择收款方式）
         $('confirmPaymentBtn').onclick = () => {
             if (pendingEndSeatId && selectedPayment) {
                 actionEndWithPayment(pendingEndSeatId, selectedPayment);
@@ -1136,11 +1140,11 @@
             }
         };
 
-        $('skipPaymentBtn').onclick = () => {
-            if (pendingEndSeatId) {
-                actionEndWithPayment(pendingEndSeatId, null);
-                $('paymentModal').classList.add('hidden');
-            }
+        // 取消按钮 - 关闭弹窗但不结束
+        $('cancelPaymentBtn').onclick = () => {
+            $('paymentModal').classList.add('hidden');
+            pendingEndSeatId = null;
+            selectedPayment = null;
         };
 
         $('addSeatBtn').onclick = () => { 
@@ -1230,7 +1234,6 @@
     setupEvents();
     updateSyncUI();
     
-    // 自动拉取一次
     if (gistConfig.gistId) {
         setTimeout(() => pullFromCloud(), 500);
     }
