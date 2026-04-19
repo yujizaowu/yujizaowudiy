@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>与己造物 · 手工店计时</title>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        body {
+            font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+            background: #f7f5f2;
+            color: #2e241f;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .app { 
+            max-width: 1600px; 
+            margin: 0 auto; 
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .shop-name {
+            font-size: 1.8rem;
+            font-weight: 400;
+            letter-spacing: 4px;
+            color: #3b2b24;
+            border-left: 5px solid #b28b6f;
+            padding-left: 16px;
+        }
+        .shop-name small { 
+            font-size: 0.9rem; 
+            color: #7f6a5c; 
+            margin-left: 6px; 
+        }
+        .admin-actions { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            align-items: center; 
+        }
+        .btn {
+            background: #e3d9d1;
+            border: 1px solid #b8a69a;
+            color: #2e241f;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 500;
+            user-select: none;
+            transition: all 0.15s;
+        }
+        .btn:hover { 
+            background: #cdbcaf; 
+        }
+        .btn-primary { 
+            background: #5e4b3c; 
+            border-color: #3f3228; 
+            color: #fdf6ef; 
+        }
+        .btn-primary:hover { 
+            background: #4a3b2f; 
+        }
+        .btn-success { 
+            background: #4a7c59; 
+            border-color: #3a6347; 
+            color: #fff; 
+        }
+        .btn-success:hover { 
+            background: #3a6347; 
+        }
+        .btn-info {
+            background: #6b8c9e;
+            border-color: #4a6a7a;
+            color: #fff;
+        }
+        .btn-info:hover {
+            background: #4a6a7a;
+        }
+        .btn-sm { 
+            padding: 3px 8px; 
+            font-size: 0.7rem; 
+        }
+        .stats-bar { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 16px; 
+            flex-wrap: wrap; 
+        }
+        .stat-card {
+            background: #fefcf9;
+            border-radius: 16px;
+            padding: 8px 16px;
+            border: 1px solid #e2d6cd;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .stat-card.active { 
+            background: #5e4b3c; 
+            color: #fdf6ef; 
+        }
+        .stat-number { 
+            font-size: 1.5rem; 
+            font-weight: 600; 
+            min-width: 35px; 
+        }
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+        }
+        .seat-card {
+            background: #fefcf9;
+            border-radius: 16px;
+            padding: 10px;
+            border: 1px solid #e2d6cd;
+        }
+        .seat-card.hidden { 
+            display: none !important; 
+        }
+        .seat-header { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 6px; 
+        }
+        .seat-name { 
+            font-weight: 700; 
+            font-size: 1rem; 
+        }
+        .seat-status {
+            font-size: 0.55rem;
+            padding: 2px 5px;
+            border-radius: 20px;
+            background: #ede6df;
+        }
+        .status-active { background: #cbd9c0; }
+        .status-paused { background: #f3e1c2; }
+        .status-reserved { background: #d4c1f0; }
+        .status-idle { background: #e5dfd9; }
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.4rem;
+            text-align: center;
+            margin: 6px 0;
+            background: #f3ede7;
+            padding: 5px 0;
+            border-radius: 12px;
+        }
+        .mode-badge {
+            font-size: 0.6rem;
+            background: #cfc1b6;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin: 0 auto 5px;
+            text-align: center;
+        }
+        
+        /* 二维码区域 - 默认隐藏 */
+        .qr-section { 
+            margin: 6px 0;
+        }
+        .qr-toggle-btn {
+            width: 100%;
+            background: #e8dfd7;
+            border: 1px dashed #b8a69a;
+            color: #5e4b3c;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+        .qr-toggle-btn:hover {
+            background: #d6c9bf;
+        }
+        .qr-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 6px;
+            padding: 8px;
+            background: #f8f4f0;
+            border-radius: 12px;
+        }
+        .qr-content.show {
+            display: flex;
+        }
+        .qr-code {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 8px;
+            padding: 5px;
+            border: 1px solid #d9ccc2;
+        }
+        .qr-url {
+            font-size: 0.45rem;
+            color: #8e7a6c;
+            margin-top: 4px;
+            word-break: break-all;
+            text-align: center;
+        }
+        .print-btn {
+            margin-top: 4px;
+            font-size: 0.55rem;
+            background: #5e4b3c;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .seat-actions { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 4px; 
+            margin: 5px 0; 
+        }
+        .seat-actions .btn { 
+            flex: 1 0 40px; 
+            padding: 4px 2px; 
+            font-size: 0.6rem; 
+        }
+        .notes-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid #d6c9bf;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            margin-top: 4px;
+            background: #fffbf8;
+        }
+        .reservation-info {
+            margin-top: 5px;
+            padding: 4px 6px;
+            background: #f4ede6;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .customer-container {
+            max-width: 420px;
+            margin: 20px auto;
+            background: #fefcf9;
+            border-radius: 36px;
+            padding: 28px 20px;
+            text-align: center;
+        }
+        .customer-timer {
+            font-size: 4rem;
+            font-family: 'Courier New', monospace;
+            background: #f2ebe4;
+            padding: 20px 10px;
+            border-radius: 50px;
+            margin: 16px 0;
+        }
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #3b2b24;
+            color: #f0e4da;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .toast-message.show { 
+            opacity: 1; 
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.hidden { 
+            display: none !important; 
+        }
+        .modal {
+            background: #fefcf9;
+            border-radius: 28px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 { 
+            margin-bottom: 16px; 
+            color: #3b2b24; 
+        }
+        .modal-input-group { 
+            margin-bottom: 14px; 
+        }
+        .modal-input-group label { 
+            display: block; 
+            margin-bottom: 4px; 
+            color: #5f4e43; 
+        }
+        .modal-input-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d6c9bf;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            background: #fffbf8;
+        }
+        .modal-actions { 
+            display: flex; 
+            gap: 8px; 
+            justify-content: flex-end; 
+            margin-top: 18px; 
+        }
+        .records-list { 
+            margin: 16px 0; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .record-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2d6cd;
+            font-size: 0.8rem;
+        }
+        .print-all-section { 
+            margin: 8px 0; 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+        }
+        .back-link {
+            display: inline-block;
+            color: #7b6456;
+            padding: 8px 20px;
+            background: #e8dfd7;
+            border-radius: 30px;
+            text-decoration: none;
+            margin-top: 16px;
+        }
+        #customerView.hidden, #adminView.hidden { 
+            display: none !important; 
+        }
+        .footer-note {
+            margin-top: 16px;
+            color: #a28d7e;
+            font-size: 0.75rem;
+        }
+    </style>
+    <!-- 二维码生成库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- Excel导出库 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="app">
+    <!-- 提示消息 -->
+    <div id="toast" class="toast-message"></div>
+    
+    <!-- 管理视图 -->
+    <div id="adminView">
+        <div class="header">
+            <div class="shop-name">与己造物 <small>· 手作时光</small></div>
+            <div class="admin-actions">
+                <button class="btn btn-sm" id="addSeatBtn" title="新增座位">➕ 座位</button>
+                <button class="btn btn-sm" id="removeSeatBtn" title="移除座位">➖ 座位</button>
+                <span id="seatCountDisplay" style="margin:0 4px; color:#5f4e43;">36</span>
+                <button class="btn btn-sm" id="saveAllNotesBtn" title="保存所有备注">💾 保存</button>
+                <button class="btn btn-sm btn-primary" id="resetAllIdleBtn" title="将所有座位设为空闲">🔄 全部空闲</button>
+                <button class="btn btn-sm btn-success" id="viewRecordsBtn" title="查看使用记录">📊 使用记录</button>
+            </div>
+        </div>
+        
+        <!-- 状态统计 -->
+        <div class="stats-bar">
+            <div class="stat-card active" data-filter="all">
+                <span class="stat-number" id="statAll">36</span>
+                <span>全部座位</span>
+            </div>
+            <div class="stat-card" data-filter="active">
+                <span class="stat-number" id="statActive">0</span>
+                <span>🟢 使用中</span>
+            </div>
+            <div class="stat-card" data-filter="reserved">
+                <span class="stat-number" id="statReserved">0</span>
+                <span>📅 已预约</span>
+            </div>
+            <div class="stat-card" data-filter="idle">
+                <span class="stat-number" id="statIdle">36</span>
+                <span>⚪ 空闲中</span>
+            </div>
+        </div>
+        
+        <!-- 功能按钮栏 -->
+        <div class="print-all-section">
+            <button class="btn btn-sm btn-info" id="showAllQRCodesBtn">📱 显示所有二维码</button>
+            <button class="btn btn-sm" id="printAllQRCodesBtn">🖨️ 打印所有二维码</button>
+            <button class="btn btn-sm btn-success" id="exportRecordsBtn">📥 导出今日记录</button>
+        </div>
+        
+        <!-- 座位网格 -->
+        <div id="seatsContainer" class="seats-grid"></div>
+        
+        <!-- 底部说明 -->
+        <div class="footer-note" style="text-align:center; margin-top:20px; padding-top:12px; border-top:1px dashed #d9ccc2;">
+            <p>📱 点击「📱 二维码」按钮显示二维码 · 微信扫描即可查看实时计时</p>
+        </div>
+    </div>
+
+    <!-- 顾客视图 -->
+    <div id="customerView" class="hidden">
+        <div class="customer-container">
+            <div style="font-size: 1.6rem; color: #5f4b3c; letter-spacing: 3px;">与己造物</div>
+            <div style="font-size: 2.5rem; margin: 16px 0;" id="customerSeatName">座位</div>
+            <div id="customerTimerDisplay" class="customer-timer">00:00:00</div>
+            <div id="customerStatusBadge" style="font-size: 1rem; margin: 8px 0;"></div>
+            <div id="customerReservationInfo"></div>
+            <div id="customerNoteDisplay" style="background:#f4ede6; border-radius:20px; padding:14px; margin:16px 0; color:#4f3c30;">暂无备注</div>
+            <div style="color:#7f6a5c; margin:16px 0;">⏱️ 计时实时更新中</div>
+            <a href="./" class="back-link">← 返回管理端</a>
+        </div>
+    </div>
+
+    <!-- 使用记录模态框 -->
+    <div id="recordsModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>📊 每日使用记录</h3>
+            <div style="display:flex; gap:8px; margin:16px 0;">
+                <input type="date" id="recordDateInput" style="flex:1; padding:8px; border-radius:20px; border:1px solid #d6c9bf; background:#fffbf8;">
+                <button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button>
+            </div>
+            <div class="records-list" id="recordsList">
+                <div style="text-align:center; color:#999; padding:20px;">请选择日期查看记录</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-sm btn-success" id="exportDayRecordsBtn">📥 导出Excel</button>
+                <button class="btn btn-sm" id="closeRecordsBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义时间模态框 -->
+    <div id="customTimeModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>⏱️ 自定义倒计时</h3>
+            <div class="modal-input-group">
+                <input type="number" id="customMinutesInput" placeholder="请输入分钟数" min="0.1" value="60" step="0.5">
+            </div>
+            <div style="color:#7f6a5c; margin-bottom:16px; font-size:0.8rem;">
+                💡 支持小数，例如 1.5 表示 1分30秒
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="cancelCustomBtn">取消</button>
+                <button class="btn btn-primary" id="confirmCustomBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预约信息模态框 -->
+    <div id="reservationModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>📅 填写预约信息</h3>
+            <div class="modal-input-group">
+                <label>顾客姓名 <span style="color:#c0392b;">*</span></label>
+                <input type="text" id="reserveNameInput" placeholder="请输入顾客姓名" maxlength="50">
+            </div>
+            <div class="modal-input-group">
+                <label>联系方式</label>
+                <input type="text" id="reserveContactInput" placeholder="电话 / 微信号 / 微信名" maxlength="100">
+            </div>
+            <div style="color:#7f6a5c; margin-bottom:8px; font-size:0.75rem;">
+                💡 姓名必填，联系方式选填
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="cancelReserveBtn">取消</button>
+                <button class="btn btn-primary" id="confirmReserveBtn">确认预约</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    "use strict";
+    
+    // ==================== 配置 ====================
+    const STORAGE_KEY = 'yujizaowu_seats_v2';
+    const RECORDS_KEY = 'yujizaowu_records_v2';
+    const DEFAULT_SEAT_COUNT = 36;
+    
+    // 获取当前页面基础URL
+    const BASE_URL = window.location.origin + window.location.pathname;
+
+    // ==================== 全局变量 ====================
+    let seats = [];
+    let usageRecords = [];
+    let globalTimer = null;
+    let currentView = 'admin';
+    let customerSeatId = null;
+    let pendingCustomSeatId = null;
+    let pendingReserveSeatId = null;
+    let currentFilter = 'all';
+    
+    // 存储已生成的二维码（避免重复生成）
+    const qrCodeCache = new Map();
+
+    // DOM 元素快捷获取
+    const $ = id => document.getElementById(id);
+    const toastEl = $('toast');
+
+    // ==================== 工具函数 ====================
+    function showToast(msg, duration = 1500) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => toastEl.classList.remove('show'), duration);
+    }
+
+    // 获取座位二维码URL
+    function getSeatUrl(seatId) {
+        return BASE_URL + '?seat=' + seatId;
+    }
+
+    // 生成二维码（只在需要时生成一次）
+    function generateQRCodeForSeat(container, seatId) {
+        if (!container) return;
+        
+        // 检查缓存
+        if (qrCodeCache.has(seatId)) {
+            container.innerHTML = '';
+            container.appendChild(qrCodeCache.get(seatId).cloneNode(true));
+            return;
+        }
+        
+        container.innerHTML = '';
+        const url = getSeatUrl(seatId);
+        try {
+            const qrDiv = document.createElement('div');
+            new QRCode(qrDiv, {
+                text: url,
+                width: 100,
+                height: 100,
+                colorDark: "#3a2c24",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+            
+            // 等待二维码生成完成
+            setTimeout(() => {
+                const canvas = qrDiv.querySelector('canvas');
+                if (canvas) {
+                    qrCodeCache.set(seatId, canvas.cloneNode(true));
+                }
+            }, 50);
+            
+            container.appendChild(qrDiv);
+        } catch (e) {
+            console.error('二维码生成失败:', e);
+            container.innerHTML = '<div style="width:100px;height:100px;background:#f0ebe6;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;color:#999;">生成失败</div>';
+        }
+    }
+
+    // 切换二维码显示
+    function toggleQRCode(seatId, show) {
+        const qrContent = $(`qr-content-${seatId}`);
+        const qrContainer = $(`qrcode-${seatId}`);
+        const toggleBtn = $(`qr-toggle-${seatId}`);
+        
+        if (qrContent && qrContainer) {
+            if (show) {
+                qrContent.classList.add('show');
+                if (toggleBtn) toggleBtn.innerHTML = '📱 隐藏二维码';
+                // 生成二维码
+                generateQRCodeForSeat(qrContainer, seatId);
+            } else {
+                qrContent.classList.remove('show');
+                if (toggleBtn) toggleBtn.innerHTML = '📱 显示二维码';
+            }
+        }
+    }
+
+    // 显示所有二维码
+    function showAllQRCodes() {
+        seats.forEach(seat => {
+            toggleQRCode(seat.id, true);
+        });
+        showToast('📱 已显示所有二维码');
+    }
+
+    // ==================== 记录管理 ====================
+    function loadRecords() {
+        try { 
+            usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; 
+        } catch(e) { 
+            usageRecords = []; 
+        }
+    }
+    
+    function saveRecords() { 
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords)); 
+    }
+    
+    function addRecord(seatName, action, duration, notes) {
+        usageRecords.push({
+            id: Date.now() + Math.random(),
+            seatName: seatName,
+            action: action,
+            duration: duration,
+            notes: notes || '',
+            timestamp: new Date().toISOString()
+        });
+        saveRecords();
+    }
+
+    // ==================== 座位数据管理 ====================
+    function createDefaultSeat(id) {
+        return {
+            id: id,
+            name: id + '号桌',
+            status: 'idle',
+            timerMode: 'countup',
+            countdownInitial: 3600,
+            accumulatedSeconds: 0,
+            running: false,
+            startTimestamp: null,
+            notes: '',
+            reserved: false,
+            reservation: null
+        };
+    }
+
+    function loadSeats() {
+        try { 
+            const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (Array.isArray(parsed) && parsed.length) { 
+                seats = parsed; 
+                return; 
+            }
+        } catch(e) {}
+        
+        seats = [];
+        for (let i = 1; i <= DEFAULT_SEAT_COUNT; i++) {
+            seats.push(createDefaultSeat(i));
+        }
+        saveSeats();
+    }
+    
+    function saveSeats() { 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); 
+    }
+
+    function getSeatIndex(id) { 
+        return seats.findIndex(s => s.id === id); 
+    }
+
+    // ==================== 计时计算 ====================
+    function getCurrentSeconds(seat) {
+        let base = seat.accumulatedSeconds || 0;
+        if (seat.running && seat.startTimestamp) {
+            base += (Date.now() - seat.startTimestamp) / 1000;
+        }
+        return base;
+    }
+
+    function formatTime(seconds) {
+        seconds = Math.max(0, seconds);
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function getTimerText(seat) {
+        if (seat.timerMode === 'countdown') {
+            return formatTime(Math.max(0, seat.countdownInitial - getCurrentSeconds(seat)));
+        }
+        return formatTime(getCurrentSeconds(seat));
+    }
+
+    function stopRunning(seat) {
+        if (seat.running && seat.startTimestamp) {
+            seat.accumulatedSeconds += (Date.now() - seat.startTimestamp) / 1000;
+            seat.running = false;
+            seat.startTimestamp = null;
+        }
+    }
+
+    // ==================== 核心操作 ====================
+    function actionOpenTable(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        const seat = seats[idx];
+        stopRunning(seat);
+        seat.status = 'active';
+        seat.reserved = false;
+        seat.reservation = null;
+        seat.accumulatedSeconds = 0;
+        seat.running = false;
+        refreshUI();
+        showToast(`✅ ${seat.name} 已开台`);
+    }
+
+    function actionStart(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        const seat = seats[idx];
+        if (seat.reserved) { showToast('⚠️ 该座位已预约，请先开台'); return; }
+        if (seat.status === 'idle') { showToast('⚠️ 请先「开台」再开始计时'); return; }
+        if (seat.running) return;
+        seat.running = true;
+        seat.startTimestamp = Date.now();
+        seat.status = 'active';
+        refreshUI();
+    }
+
+    function actionPause(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].status = 'paused';
+        refreshUI();
+        showToast(`⏸️ ${seats[idx].name} 已暂停`);
+    }
+
+    function actionEnd(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        const seat = seats[idx];
+        stopRunning(seat);
+        
+        const duration = seat.accumulatedSeconds;
+        addRecord(seat.name, '结束使用', formatTime(duration), seat.notes);
+        
+        seat.status = 'idle';
+        seat.reserved = false;
+        seat.reservation = null;
+        seat.accumulatedSeconds = 0;
+        refreshUI();
+        showToast(`✅ ${seat.name} 已结束，使用时长 ${formatTime(duration)}`);
+    }
+
+    function actionReset(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].accumulatedSeconds = 0;
+        refreshUI();
+        showToast(`🔄 ${seats[idx].name} 计时已重置`);
+    }
+
+    function actionToggleMode(seatId) {
+        const idx = getSeatIndex(seatId);
+        if (idx === -1) return;
+        const seat = seats[idx];
+        stopRunning(seat);
+        seat.timerMode = seat.timerMode === 'countup' ? 'countdown' : 'countup';
+        seat.accumulatedSeconds = 0;
+        renderAdminGrid();
+        showToast(`🔁 已切换为${seat.timerMode === 'countdown' ? '倒计时' : '正计时'}`);
+    }
+
+    // ==================== UI 渲染 ====================
+    function renderAdminGrid() {
+        let html = '';
+        seats.forEach(seat => {
+            const statusClass = seat.reserved ? 'status-reserved' : 
+                (seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : 
+                (seat.status === 'paused' ? 'status-paused' : 'status-idle'));
+            const statusText = seat.reserved ? '已预约' : 
+                (seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '已暂停'));
+            const modeText = seat.timerMode === 'countdown' ? '⏳ 倒计时' : '⏱️ 正计时';
+            
+            html += `
+                <div class="seat-card" data-seat-id="${seat.id}">
+                    <div class="seat-header">
+                        <span class="seat-name">${seat.name}</span>
+                        <span class="seat-status ${statusClass}">${statusText}</span>
+                    </div>
+                    <div class="mode-badge">${modeText}</div>
+                    <div class="timer-display" id="timer-${seat.id}">${getTimerText(seat)}</div>
+                    
+                    <!-- 二维码区域 - 按钮控制显示 -->
+                    <div class="qr-section">
+                        <button class="qr-toggle-btn" id="qr-toggle-${seat.id}" data-qr-toggle="${seat.id}">
+                            📱 显示二维码
+                        </button>
+                        <div class="qr-content" id="qr-content-${seat.id}">
+                            <div class="qr-code" id="qrcode-${seat.id}"></div>
+                            <div class="qr-url">?seat=${seat.id}</div>
+                            <button class="print-btn" data-print-seat="${seat.id}">🖨️ 打印二维码</button>
+                        </div>
+                    </div>
+                    
+                    <div class="seat-actions">
+                        <button class="btn btn-sm" data-action="start" data-id="${seat.id}" title="开始计时">▶</button>
+                        <button class="btn btn-sm" data-action="pause" data-id="${seat.id}" title="暂停计时">⏸</button>
+                        <button class="btn btn-sm" data-action="end" data-id="${seat.id}" title="结束使用">⏹</button>
+                        <button class="btn btn-sm" data-action="reset" data-id="${seat.id}" title="重置时间">↺</button>
+                    </div>
+                    <div class="seat-actions">
+                        <button class="btn btn-sm" data-action="openTable" data-id="${seat.id}" title="开台">开台</button>
+                        <button class="btn btn-sm" data-action="reserve" data-id="${seat.id}" title="预约">预约</button>
+                        <button class="btn btn-sm" data-action="toggleMode" data-id="${seat.id}" title="切换正/倒计时">切换</button>
+                        <button class="btn btn-sm btn-primary" data-action="customCountdown" data-id="${seat.id}" title="自定义倒计时">✨</button>
+                    </div>
+                    <input type="text" class="notes-input" placeholder="添加备注..." data-id="${seat.id}" value="${seat.notes || ''}">
+                    ${seat.reserved && seat.reservation ? 
+                        `<div class="reservation-info">
+                            <span>📅</span>
+                            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${seat.reservation.name} | ${seat.reservation.contact}">${seat.reservation.name} | ${seat.reservation.contact}</span>
+                            <button style="background:none;border:none;cursor:pointer;font-size:1rem;" data-action="cancelReserve" data-id="${seat.id}" title="取消预约">✕</button>
+                        </div>` : 
+                        '<div class="reservation-info" style="display:none;"></div>'
+                    }
+                </div>
+            `;
+        });
+        $('seatsContainer').innerHTML = html;
+        
+        // 清除二维码缓存（因为DOM重新生成了）
+        qrCodeCache.clear();
+        
+        updateStats();
+        applyFilter();
+        $('seatCountDisplay').textContent = seats.length;
+    }
+
+    function updateStats() {
+        $('statAll').textContent = seats.length;
+        $('statActive').textContent = seats.filter(s => s.status === 'active' && !s.reserved).length;
+        $('statReserved').textContent = seats.filter(s => s.reserved).length;
+        $('statIdle').textContent = seats.filter(s => s.status === 'idle' && !s.reserved).length;
+    }
+
+    function applyFilter() {
+        document.querySelectorAll('.seat-card').forEach(card => {
+            const seatId = parseInt(card.dataset.seatId);
+            const seat = seats.find(s => s.id === seatId);
+            if (!seat) return;
+            
+            let show = true;
+            if (currentFilter === 'active') show = seat.status === 'active' && !seat.reserved;
+            else if (currentFilter === 'reserved') show = seat.reserved;
+            else if (currentFilter === 'idle') show = seat.status === 'idle' && !seat.reserved;
+            
+            card.classList.toggle('hidden', !show);
+        });
+    }
+
+    function refreshUI() {
+        saveSeats();
+        seats.forEach(seat => {
+            const timerEl = $(`timer-${seat.id}`);
+            if (timerEl) timerEl.textContent = getTimerText(seat);
+            
+            const card = document.querySelector(`.seat-card[data-seat-id="${seat.id}"]`);
+            if (card) {
+                const statusSpan = card.querySelector('.seat-status');
+                if (statusSpan) {
+                    const text = seat.reserved ? '已预约' : 
+                        (seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '已暂停'));
+                    statusSpan.textContent = text;
+                    statusSpan.className = `seat-status ${seat.reserved ? 'status-reserved' : 
+                        (seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : 
+                        (seat.status === 'paused' ? 'status-paused' : 'status-idle'))}`;
+                }
+            }
+        });
+        updateStats();
+        if (currentView === 'customer' && customerSeatId) {
+            renderCustomerView();
+        }
+    }
+
+    function renderCustomerView() {
+        const seat = seats.find(s => s.id === customerSeatId);
+        if (!seat) {
+            $('customerSeatName').textContent = '座位不存在';
+            return;
+        }
+        $('customerSeatName').textContent = seat.name;
+        $('customerTimerDisplay').textContent = getTimerText(seat);
+        
+        let statusText = '';
+        if (seat.reserved) statusText = '📅 已预约';
+        else if (seat.status === 'active') statusText = seat.running ? '🟢 使用中' : '⏸️ 已暂停';
+        else statusText = '⚪ 空闲中';
+        $('customerStatusBadge').textContent = statusText;
+        
+        const resEl = $('customerReservationInfo');
+        if (seat.reserved && seat.reservation) {
+            resEl.innerHTML = `
+                <div style="background:#f0e6f5; border-radius:16px; padding:12px; margin:8px 0;">
+                    <div style="font-weight:500; margin-bottom:6px;">📋 预约信息</div>
+                    <div>👤 预约人：${seat.reservation.name}</div>
+                    <div>📞 联系方式：${seat.reservation.contact}</div>
+                </div>
+            `;
+        } else {
+            resEl.innerHTML = '';
+        }
+        
+        $('customerNoteDisplay').textContent = seat.notes || '暂无备注';
+    }
+
+    // ==================== 记录查看与导出 ====================
+    function showRecords(dateStr) {
+        const date = dateStr || new Date().toISOString().split('T')[0];
+        $('recordDateInput').value = date;
+        
+        const list = $('recordsList');
+        const dayRecords = usageRecords.filter(r => r.timestamp.startsWith(date))
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        if (!dayRecords.length) {
+            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">📭 当天暂无使用记录</div>';
+            return;
+        }
+        
+        list.innerHTML = dayRecords.map(r => `
+            <div class="record-item">
+                <strong>${r.seatName}</strong> · ${r.action} · ${r.duration}
+                <span style="color:#999; font-size:0.7rem; margin-left:8px;">${new Date(r.timestamp).toLocaleTimeString('zh-CN', {hour12: false})}</span>
+                ${r.notes ? '<br><span style="color:#666; font-size:0.75rem;">📝 ' + r.notes + '</span>' : ''}
+            </div>
+        `).join('');
+    }
+
+    function exportToExcel(dateStr) {
+        const date = dateStr || new Date().toISOString().split('T')[0];
+        const data = [['座位', '操作', '时长', '备注', '时间']];
+        
+        usageRecords.filter(r => r.timestamp.startsWith(date))
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .forEach(r => {
+                data.push([
+                    r.seatName,
+                    r.action,
+                    r.duration,
+                    r.notes || '',
+                    new Date(r.timestamp).toLocaleString('zh-CN', {hour12: false})
+                ]);
+            });
+        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '使用记录');
+        XLSX.writeFile(wb, `与己造物_使用记录_${date}.xlsx`);
+        showToast('✅ Excel 导出成功');
+    }
+
+    // ==================== 打印功能 ====================
+    function printSeatQR(seatId) {
+        const seat = seats.find(s => s.id === seatId);
+        if (!seat) return;
+        
+        const url = getSeatUrl(seatId);
+        const w = window.open('', '_blank');
+        w.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${seat.name} 二维码</title>
+                <style>
+                    body { font-family: 'Microsoft YaHei', sans-serif; text-align: center; padding: 30px; }
+                    h2 { color: #3b2b24; margin-bottom: 20px; }
+                    .url { color: #666; margin: 20px; word-break: break-all; font-size: 14px; }
+                    @media print { .no-print { display: none; } }
+                    .btn { 
+                        background: #5e4b3c; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 24px; 
+                        border-radius: 30px; 
+                        font-size: 16px; 
+                        cursor: pointer; 
+                        margin: 10px;
+                    }
+                </style>
+                <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+            </head>
+            <body>
+                <h2>与己造物 · ${seat.name}</h2>
+                <div id="qr-print" style="display: flex; justify-content: center;"></div>
+                <div class="url">${url}</div>
+                <p style="margin-top: 20px;">📱 微信扫码查看实时计时</p>
+                <button class="btn no-print" onclick="window.print()">🖨️ 打印</button>
+                <button class="btn no-print" onclick="window.close()" style="background:#999;">关闭</button>
+                <script>
+                    new QRCode(document.getElementById('qr-print'), {
+                        text: '${url}',
+                        width: 250,
+                        height: 250,
+                        colorDark: '#3a2c24',
+                        colorLight: '#ffffff'
+                    });
+                <\/script>
+            </body>
+            </html>
+        `);
+    }
+
+    function printAllQRCodes() {
+        const w = window.open('', '_blank');
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>所有座位二维码 - 与己造物</title>
+                <style>
+                    body { font-family: 'Microsoft YaHei', sans-serif; padding: 20px; }
+                    h2 { text-align: center; color: #3b2b24; margin-bottom: 20px; }
+                    .qr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+                    .qr-item { 
+                        text-align: center; 
+                        padding: 15px; 
+                        border: 1px solid #ddd; 
+                        border-radius: 16px; 
+                        background: #fefcf9;
+                    }
+                    .qr-item h3 { margin: 0 0 10px; font-size: 16px; color: #3a2c24; }
+                    .url { font-size: 10px; color: #666; word-break: break-all; margin-top: 8px; }
+                    .btn { 
+                        background: #5e4b3c; 
+                        color: white; 
+                        border: none; 
+                        padding: 10px 24px; 
+                        border-radius: 30px; 
+                        font-size: 16px; 
+                        cursor: pointer; 
+                        margin: 20px 10px;
+                    }
+                    @media print { 
+                        .no-print { display: none; } 
+                        .qr-item { break-inside: avoid; }
+                    }
+                </style>
+                <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+            </head>
+            <body>
+                <h2>与己造物 · 座位二维码</h2>
+                <div style="text-align: center;" class="no-print">
+                    <button class="btn" onclick="window.print()">🖨️ 打印全部</button>
+                    <button class="btn" onclick="window.close()" style="background:#999;">关闭</button>
+                </div>
+                <div class="qr-grid">
+        `;
+        
+        seats.forEach(seat => {
+            const url = getSeatUrl(seat.id);
+            html += `
+                <div class="qr-item">
+                    <h3>${seat.name}</h3>
+                    <div id="qr-print-${seat.id}" style="display: flex; justify-content: center;"></div>
+                    <div class="url">${url}</div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+                <script>
+                    setTimeout(() => {
+        `;
+        seats.forEach(seat => {
+            html += `new QRCode(document.getElementById('qr-print-${seat.id}'), { text: '${getSeatUrl(seat.id)}', width: 120, height: 120, colorDark: '#3a2c24', colorLight: '#ffffff' });`;
+        });
+        html += `
+                    }, 100);
+                <\/script>
+            </body>
+            </html>
+        `;
+        w.document.write(html);
+    }
+
+    // ==================== 视图路由 ====================
+    function detectView() {
+        const params = new URLSearchParams(window.location.search);
+        const seatParam = params.get('seat') || params.get('s');
+        
+        if (seatParam && !isNaN(parseInt(seatParam))) {
+            currentView = 'customer';
+            customerSeatId = parseInt(seatParam);
+            $('adminView').classList.add('hidden');
+            $('customerView').classList.remove('hidden');
+            renderCustomerView();
+            showToast(`${seats.find(s => s.id === customerSeatId)?.name || '座位'} · 实时计时`);
+        } else {
+            currentView = 'admin';
+            $('adminView').classList.remove('hidden');
+            $('customerView').classList.add('hidden');
+            renderAdminGrid();
+        }
+    }
+
+    // ==================== 事件绑定 ====================
+    function setupEvents() {
+        // 座位卡片事件委托
+        $('seatsContainer').addEventListener('click', e => {
+            // 处理二维码切换按钮
+            const qrToggle = e.target.closest('[data-qr-toggle]');
+            if (qrToggle) {
+                const seatId = parseInt(qrToggle.dataset.qrToggle);
+                const qrContent = $(`qr-content-${seatId}`);
+                const isShowing = qrContent.classList.contains('show');
+                toggleQRCode(seatId, !isShowing);
+                return;
+            }
+            
+            // 处理操作按钮
+            const btn = e.target.closest('[data-action]');
+            if (btn) {
+                const action = btn.dataset.action;
+                const seatId = parseInt(btn.dataset.id);
+                
+                switch(action) {
+                    case 'start': actionStart(seatId); break;
+                    case 'pause': actionPause(seatId); break;
+                    case 'end': actionEnd(seatId); break;
+                    case 'reset': actionReset(seatId); break;
+                    case 'openTable': actionOpenTable(seatId); break;
+                    case 'reserve': 
+                        pendingReserveSeatId = seatId;
+                        $('reserveNameInput').value = '';
+                        $('reserveContactInput').value = '';
+                        $('reservationModal').classList.remove('hidden');
+                        break;
+                    case 'cancelReserve':
+                        const idx = getSeatIndex(seatId);
+                        if (idx !== -1) { 
+                            seats[idx].reserved = false; 
+                            seats[idx].reservation = null; 
+                            refreshUI();
+                            showToast('预约已取消');
+                        }
+                        break;
+                    case 'toggleMode': actionToggleMode(seatId); break;
+                    case 'customCountdown': 
+                        pendingCustomSeatId = seatId;
+                        $('customMinutesInput').value = '60';
+                        $('customTimeModal').classList.remove('hidden');
+                        break;
+                }
+            }
+            
+            // 处理打印按钮
+            const printBtn = e.target.closest('[data-print-seat]');
+            if (printBtn) {
+                printSeatQR(parseInt(printBtn.dataset.printSeat));
+            }
+        });
+
+        // 统计卡片筛选
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                currentFilter = card.dataset.filter;
+                document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                applyFilter();
+            });
+        });
+
+        // 顶部按钮
+        $('addSeatBtn').addEventListener('click', () => {
+            const newId = Math.max(...seats.map(s => s.id), 0) + 1;
+            seats.push(createDefaultSeat(newId));
+            saveSeats();
+            renderAdminGrid();
+            showToast(`✅ 已添加 ${newId}号桌`);
+        });
+
+        $('removeSeatBtn').addEventListener('click', () => {
+            if (seats.length <= 1) { 
+                showToast('⚠️ 至少保留一个座位'); 
+                return; 
+            }
+            seats.pop();
+            saveSeats();
+            renderAdminGrid();
+            showToast('✅ 已移除最后一个座位');
+        });
+
+        $('saveAllNotesBtn').addEventListener('click', () => {
+            document.querySelectorAll('.notes-input').forEach(input => {
+                const idx = getSeatIndex(parseInt(input.dataset.id));
+                if (idx !== -1) seats[idx].notes = input.value;
+            });
+            saveSeats();
+            showToast('✅ 所有备注已保存');
+        });
+
+        $('resetAllIdleBtn').addEventListener('click', () => {
+            seats.forEach(s => { 
+                stopRunning(s); 
+                s.status = 'idle'; 
+                s.reserved = false; 
+                s.reservation = null; 
+                s.accumulatedSeconds = 0; 
+            });
+            saveSeats();
+            renderAdminGrid();
+            showToast('✅ 所有座位已设为空闲');
+        });
+
+        $('showAllQRCodesBtn').addEventListener('click', showAllQRCodes);
+        $('printAllQRCodesBtn').addEventListener('click', printAllQRCodes);
+
+        // 记录相关
+        $('viewRecordsBtn').addEventListener('click', () => {
+            showRecords(new Date().toISOString().split('T')[0]);
+            $('recordsModal').classList.remove('hidden');
+        });
+
+        $('closeRecordsBtn').addEventListener('click', () => {
+            $('recordsModal').classList.add('hidden');
+        });
+
+        $('loadRecordsBtn').addEventListener('click', () => {
+            if ($('recordDateInput').value) showRecords($('recordDateInput').value);
+        });
+
+        $('exportRecordsBtn').addEventListener('click', () => {
+            exportToExcel(new Date().toISOString().split('T')[0]);
+        });
+
+        $('exportDayRecordsBtn').addEventListener('click', () => {
+            exportToExcel($('recordDateInput').value);
+            $('recordsModal').classList.add('hidden');
+        });
+
+        // 自定义时间模态框
+        $('cancelCustomBtn').addEventListener('click', () => {
+            $('customTimeModal').classList.add('hidden');
+        });
+
+        $('confirmCustomBtn').addEventListener('click', () => {
+            const minutes = parseFloat($('customMinutesInput').value);
+            if (minutes > 0 && pendingCustomSeatId) {
+                const idx = getSeatIndex(pendingCustomSeatId);
+                if (idx !== -1) { 
+                    stopRunning(seats[idx]);
+                    seats[idx].countdownInitial = Math.floor(minutes * 60);
+                    seats[idx].timerMode = 'countdown';
+                    seats[idx].accumulatedSeconds = 0;
+                    refreshUI();
+                    showToast(`✅ 倒计时设为 ${minutes} 分钟`);
+                }
+            } else {
+                showToast('⚠️ 请输入有效的分钟数');
+            }
+            $('customTimeModal').classList.add('hidden');
+        });
+
+        // 预约模态框
+        $('cancelReserveBtn').addEventListener('click', () => {
+            $('reservationModal').classList.add('hidden');
+        });
+
+        $('confirmReserveBtn').addEventListener('click', () => {
+            const name = $('reserveNameInput').value.trim();
+            if (!name) {
+                showToast('⚠️ 请填写顾客姓名');
+                return;
+            }
+            
+            if (pendingReserveSeatId) {
+                const idx = getSeatIndex(pendingReserveSeatId);
+                if (idx !== -1) {
+                    stopRunning(seats[idx]);
+                    seats[idx].reserved = true;
+                    seats[idx].status = 'idle';
+                    seats[idx].reservation = {
+                        name: name,
+                        contact: $('reserveContactInput').value.trim() || '未填写',
+                        time: new Date().toLocaleString('zh-CN', {hour12: false})
+                    };
+                    addRecord(seats[idx].name, '预约', '-', `${name} ${seats[idx].reservation.contact}`);
+                    refreshUI();
+                    showToast(`✅ ${seats[idx].name} 已预约给 ${name}`);
+                }
+            }
+            $('reservationModal').classList.add('hidden');
+            $('reserveNameInput').value = '';
+            $('reserveContactInput').value = '';
+        });
+
+        // 点击模态框背景关闭
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', e => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        });
+    }
+
+    // ==================== 初始化 ====================
+    loadSeats();
+    loadRecords();
+    detectView();
+    setupEvents();
+    
+    // 全局定时器
+    globalTimer = setInterval(() => {
+        seats.forEach(seat => {
+            const el = $(`timer-${seat.id}`);
+            if (el) el.textContent = getTimerText(seat);
+            
+            if (seat.timerMode === 'countdown' && seat.running) {
+                if (seat.countdownInitial - getCurrentSeconds(seat) <= 0) {
+                    seat.running = false;
+                    seat.accumulatedSeconds = seat.countdownInitial;
+                    seat.status = 'paused';
+                    refreshUI();
+                }
+            }
+        });
+        
+        updateStats();
+        
+        if (currentView === 'customer' && customerSeatId) {
+            const seat = seats.find(s => s.id === customerSeatId);
+            if (seat) {
+                $('customerTimerDisplay').textContent = getTimerText(seat);
+            }
+        }
+    }, 200);
+    
+    console.log('✅ 与己造物 · 手工店计时系统已启动');
+})();
+</script>
+</body>
+</html>
