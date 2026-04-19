@@ -2,37 +2,24 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>与己造物 · 手工店计时</title>
     <style>
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
+            font-family: system-ui, sans-serif;
             background: #f7f5f2;
             color: #2e241f;
             padding: 12px;
             min-height: 100vh;
         }
-        .app { 
-            max-width: 1800px; 
-            margin: 0 auto; 
-        }
-        
+        .app { max-width: 1800px; margin: 0 auto; }
         .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 16px;
             flex-wrap: wrap;
-            gap: 8px;
-        }
-        .shop-name-wrapper {
-            display: flex;
-            align-items: center;
             gap: 8px;
         }
         .shop-name {
@@ -43,17 +30,8 @@
             border-left: 4px solid #b28b6f;
             padding-left: 14px;
         }
-        .shop-name small { 
-            font-size: 0.85rem; 
-            color: #7f6a5c; 
-            margin-left: 6px; 
-        }
-        .admin-actions { 
-            display: flex; 
-            gap: 6px; 
-            flex-wrap: wrap; 
-            align-items: center; 
-        }
+        .shop-name small { font-size: 0.85rem; color: #7f6a5c; margin-left: 6px; }
+        .admin-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .sync-status-badge {
             display: flex;
             align-items: center;
@@ -84,33 +62,11 @@
             font-size: 0.8rem;
             cursor: pointer;
             font-weight: 500;
-            user-select: none;
-            transition: all 0.15s;
             white-space: nowrap;
         }
-        .btn:hover { 
-            background: #cdbcaf; 
-        }
-        .btn-primary { 
-            background: #5e4b3c; 
-            border-color: #3f3228; 
-            color: #fdf6ef; 
-        }
-        .btn-success { 
-            background: #4a7c59; 
-            border-color: #3a6347; 
-            color: #fff; 
-        }
-        .btn-sm { 
-            padding: 5px 10px; 
-            font-size: 0.75rem; 
-        }
-        .stats-bar { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 14px; 
-            flex-wrap: wrap; 
-        }
+        .btn-primary { background: #5e4b3c; border-color: #3f3228; color: #fdf6ef; }
+        .btn-success { background: #4a7c59; border-color: #3a6347; color: #fff; }
+        .stats-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
         .stat-card {
             background: #fefcf9;
             border-radius: 20px;
@@ -120,17 +76,9 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
         }
-        .stat-card.active { 
-            background: #5e4b3c; 
-            color: #fdf6ef; 
-        }
-        .stat-number { 
-            font-size: 1.4rem; 
-            font-weight: 600; 
-            min-width: 35px; 
-        }
+        .stat-card.active { background: #5e4b3c; color: #fdf6ef; }
+        .stat-number { font-size: 1.4rem; font-weight: 600; min-width: 35px; }
         .seats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -142,16 +90,8 @@
             padding: 12px;
             border: 1px solid #e2d6cd;
         }
-        .seat-card.hidden { display: none; }
-        .seat-header { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 6px; 
-        }
-        .seat-name { 
-            font-weight: 700; 
-            font-size: 1rem; 
-        }
+        .seat-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .seat-name { font-weight: 700; font-size: 1rem; }
         .seat-status {
             font-size: 0.6rem;
             padding: 2px 6px;
@@ -160,10 +100,9 @@
         }
         .status-active { background: #cbd9c0; }
         .status-paused { background: #f3e1c2; }
-        .status-reserved { background: #d4c1f0; }
         .status-idle { background: #e5dfd9; }
         .timer-display {
-            font-family: 'Courier New', monospace;
+            font-family: monospace;
             font-size: 1.4rem;
             text-align: center;
             margin: 6px 0;
@@ -180,25 +119,14 @@
             margin: 0 auto 5px;
             text-align: center;
         }
-        .seat-actions { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 4px; 
-            margin: 5px 0; 
-        }
-        .seat-actions .btn { 
-            flex: 1 0 35px; 
-            padding: 4px 2px; 
-            font-size: 0.6rem; 
-        }
+        .seat-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0; }
+        .seat-actions .btn { flex: 1 0 35px; padding: 4px 2px; font-size: 0.6rem; }
         .notes-selector-wrapper {
             margin-top: 6px;
             border-top: 1px dashed #d6c9bf;
             padding-top: 6px;
         }
-        .custom-select-wrapper {
-            position: relative;
-        }
+        .custom-select-wrapper { position: relative; }
         .notes-select {
             width: 100%;
             padding: 5px 20px 5px 8px;
@@ -206,7 +134,6 @@
             border-radius: 16px;
             font-size: 0.65rem;
             background: #fffbf8;
-            cursor: pointer;
             appearance: none;
         }
         .select-arrow {
@@ -214,30 +141,8 @@
             right: 8px;
             top: 50%;
             transform: translateY(-50%);
-            pointer-events: none;
             color: #7f6a5c;
             font-size: 0.7rem;
-        }
-        .custom-note-input-wrapper {
-            display: flex;
-            gap: 4px;
-            margin-top: 5px;
-        }
-        .custom-note-input {
-            flex: 1;
-            padding: 5px 8px;
-            border: 1px solid #d6c9bf;
-            border-radius: 16px;
-            font-size: 0.6rem;
-            background: #fffbf8;
-        }
-        .save-custom-btn {
-            padding: 3px 6px;
-            background: #e3d9d1;
-            border: 1px solid #b8a69a;
-            border-radius: 16px;
-            font-size: 0.55rem;
-            cursor: pointer;
         }
         .current-note-display {
             margin-top: 4px;
@@ -246,16 +151,6 @@
             padding: 2px 5px;
             background: #f4ede6;
             border-radius: 10px;
-        }
-        .reservation-info {
-            margin-top: 5px;
-            padding: 3px 6px;
-            background: #f4ede6;
-            border-radius: 10px;
-            font-size: 0.55rem;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
         .toast-message {
             position: fixed;
@@ -275,10 +170,7 @@
         .toast-message.show { opacity: 1; }
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
@@ -296,50 +188,17 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        .modal h3 { 
-            margin-bottom: 16px; 
-            color: #3b2b24; 
-            font-size: 1.1rem;
-        }
+        .modal h3 { margin-bottom: 16px; color: #3b2b24; }
         .modal-input-group { margin-bottom: 14px; }
-        .modal-input-group label { 
-            display: block; 
-            margin-bottom: 5px; 
-            color: #5f4e43; 
-            font-size: 0.8rem;
-        }
+        .modal-input-group label { display: block; margin-bottom: 5px; color: #5f4e43; }
         .modal-input-group input {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid #d6c9bf;
             border-radius: 20px;
-            font-size: 0.9rem;
             background: #fffbf8;
         }
-        .modal-actions { 
-            display: flex; 
-            gap: 8px; 
-            justify-content: flex-end; 
-            margin-top: 20px; 
-        }
-        .records-list { 
-            margin: 14px 0; 
-            max-height: 280px; 
-            overflow-y: auto; 
-        }
-        .record-item {
-            padding: 7px 10px;
-            border-bottom: 1px solid #e2d6cd;
-            font-size: 0.75rem;
-        }
-        .footer-note {
-            margin-top: 16px;
-            color: #a28d7e;
-            font-size: 0.7rem;
-            text-align: center;
-            border-top: 1px dashed #d9ccc2;
-            padding-top: 10px;
-        }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
         .payment-methods {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -352,41 +211,30 @@
             border-radius: 12px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s;
-            background: #fffbf8;
         }
         .payment-option.selected {
             border-color: #5e4b3c;
             background: #5e4b3c;
             color: #fdf6ef;
         }
-        .payment-option .payment-icon {
-            font-size: 1.4rem;
-            margin-bottom: 4px;
-        }
-        .payment-option .payment-name {
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        .payment-hint {
-            text-align: center;
-            color: #999;
-            font-size: 0.75rem;
-            margin-top: 8px;
-        }
-        
-        /* 云设置说明 */
+        .payment-option .payment-icon { font-size: 1.4rem; }
         .gist-help {
             background: #f4ede6;
             border-radius: 12px;
             padding: 12px;
             margin-bottom: 16px;
             font-size: 0.75rem;
-            color: #5f4e43;
         }
-        .gist-help a {
-            color: #5e4b3c;
-            font-weight: 600;
+        .gist-help a { color: #5e4b3c; font-weight: 600; }
+        .proxy-selector {
+            margin-bottom: 16px;
+        }
+        .proxy-selector select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #d6c9bf;
+            background: #fffbf8;
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -397,31 +245,29 @@
     
     <div id="adminView">
         <div class="header">
-            <div class="shop-name-wrapper">
-                <div class="shop-name">
-                    <span id="mainShopName">与己造物</span> 
-                    <small id="shopSubtitle">· 手作时光</small>
-                </div>
+            <div class="shop-name">
+                <span id="mainShopName">与己造物</span> 
+                <small>· 手作时光</small>
             </div>
             <div class="admin-actions">
-                <div class="sync-status-badge" id="syncStatusBadge">
+                <div class="sync-status-badge">
                     <span class="sync-dot" id="syncDot"></span>
-                    <span id="syncTextBar">本地</span>
+                    <span id="syncText">本地</span>
                 </div>
-                <button class="btn btn-sm" id="syncNowBtn" title="手动同步">🔄</button>
-                <button class="btn btn-sm" id="cloudSetupBtn" title="云同步设置">☁️</button>
-                <button class="btn btn-sm" id="addSeatBtn">+座位</button>
-                <button class="btn btn-sm" id="removeSeatBtn">-座位</button>
-                <span id="seatCountDisplay" style="margin:0 4px;">36</span>
-                <button class="btn btn-sm btn-primary" id="resetAllIdleBtn">全部空闲</button>
-                <button class="btn btn-sm btn-success" id="viewRecordsBtn">记录</button>
-                <button class="btn btn-sm btn-success" id="exportRecordsBtn">导出</button>
+                <button class="btn" id="syncNowBtn" title="手动同步">🔄</button>
+                <button class="btn" id="cloudSetupBtn" title="云同步设置">☁️</button>
+                <button class="btn" id="addSeatBtn">+座位</button>
+                <button class="btn" id="removeSeatBtn">-座位</button>
+                <span id="seatCountDisplay">36</span>
+                <button class="btn btn-primary" id="resetAllIdleBtn">全部空闲</button>
+                <button class="btn btn-success" id="viewRecordsBtn">记录</button>
+                <button class="btn btn-success" id="exportRecordsBtn">导出</button>
             </div>
         </div>
         
         <div class="stats-bar">
             <div class="stat-card active" data-filter="all">
-                <span class="stat-number" id="statAll">36</span><span>全部</span>
+                <span class="stat-number" id="statAll">0</span><span>全部</span>
             </div>
             <div class="stat-card" data-filter="active">
                 <span class="stat-number" id="statActive">0</span><span>使用中</span>
@@ -430,24 +276,36 @@
                 <span class="stat-number" id="statReserved">0</span><span>已预约</span>
             </div>
             <div class="stat-card" data-filter="idle">
-                <span class="stat-number" id="statIdle">36</span><span>空闲</span>
+                <span class="stat-number" id="statIdle">0</span><span>空闲</span>
             </div>
         </div>
         
         <div id="seatsContainer" class="seats-grid"></div>
         
-        <div class="footer-note">
+        <div class="footer-note" style="margin-top:16px;text-align:center;color:#a28d7e;font-size:0.7rem;">
             <p>点击「开台」开始计时 · 结束必须选择收款方式</p>
         </div>
     </div>
 
-    <!-- 云同步设置模态框 -->
+    <!-- 云设置弹窗 -->
     <div id="cloudSetupModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>☁️ 云端同步设置</h3>
+            
+            <!-- 代理选择 -->
+            <div class="proxy-selector">
+                <label style="display:block;margin-bottom:5px;">🌐 网络代理（解决连接失败）</label>
+                <select id="proxySelect">
+                    <option value="direct">直连（可能失败）</option>
+                    <option value="corsproxy">CORS 代理 1</option>
+                    <option value="allorigins">CORS 代理 2</option>
+                    <option value="jsdelivr">jsDelivr CDN</option>
+                </select>
+            </div>
+            
             <div class="gist-help">
                 👉 <a href="https://gist.github.com/" target="_blank">点击创建 Gist</a>，复制网址末尾32位字符<br>
-                多设备输入相同 Gist ID 即可同步数据
+                如果直连失败，请尝试切换上面的代理
             </div>
             <div class="modal-input-group">
                 <label>Gist ID</label>
@@ -463,82 +321,44 @@
         </div>
     </div>
 
-    <!-- 记录模态框 -->
-    <div id="recordsModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>每日使用记录</h3>
-            <div style="display:flex; gap:8px; margin:16px 0;">
-                <input type="date" id="recordDateInput" style="flex:1; padding:8px; border-radius:20px; border:1px solid #d6c9bf;">
-                <button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button>
-            </div>
-            <div class="records-list" id="recordsList"></div>
-            <div class="modal-actions">
-                <button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button>
-                <button class="btn btn-sm" id="closeRecordsBtn">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 倒计时模态框 -->
-    <div id="customTimeModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>设置倒计时</h3>
-            <div class="modal-input-group">
-                <input type="number" id="customMinutesInput" placeholder="分钟数" min="0.1" value="60" step="0.5">
-            </div>
-            <div class="modal-actions">
-                <button class="btn" id="cancelCustomBtn">取消</button>
-                <button class="btn btn-primary" id="confirmCustomBtn">确定</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 预约模态框 -->
-    <div id="reservationModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>填写预约信息</h3>
-            <div class="modal-input-group">
-                <label>顾客姓名 *</label>
-                <input type="text" id="reserveNameInput" placeholder="姓名">
-            </div>
-            <div class="modal-input-group">
-                <label>联系方式</label>
-                <input type="text" id="reserveContactInput" placeholder="电话/微信号">
-            </div>
-            <div class="modal-actions">
-                <button class="btn" id="cancelReserveBtn">取消</button>
-                <button class="btn btn-primary" id="confirmReserveBtn">确认</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 收款模态框 -->
+    <!-- 收款弹窗 -->
     <div id="paymentModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>💰 选择收款方式</h3>
-            <div id="paymentSeatInfo" style="margin-bottom:12px; color:#5f4e43;"></div>
+            <div id="paymentSeatInfo" style="margin-bottom:12px;"></div>
             <div class="payment-methods">
                 <div class="payment-option" data-payment="抖音团购">
                     <div class="payment-icon">🎵</div>
-                    <div class="payment-name">抖音团购</div>
+                    <div>抖音团购</div>
                 </div>
                 <div class="payment-option" data-payment="美团团购">
                     <div class="payment-icon">🍔</div>
-                    <div class="payment-name">美团团购</div>
+                    <div>美团团购</div>
                 </div>
                 <div class="payment-option" data-payment="支付宝">
                     <div class="payment-icon">💙</div>
-                    <div class="payment-name">支付宝</div>
+                    <div>支付宝</div>
                 </div>
                 <div class="payment-option" data-payment="微信">
                     <div class="payment-icon">💚</div>
-                    <div class="payment-name">微信</div>
+                    <div>微信</div>
                 </div>
             </div>
-            <div class="payment-hint">👆 请选择一种收款方式</div>
+            <div style="text-align:center;color:#999;font-size:0.75rem;margin-top:8px;">👆 请选择一种收款方式</div>
             <div class="modal-actions">
                 <button class="btn" id="cancelPaymentBtn">取消</button>
                 <button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 记录弹窗 -->
+    <div id="recordsModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>使用记录</h3>
+            <div id="recordsList" style="max-height:300px;overflow-y:auto;"></div>
+            <div class="modal-actions">
+                <button class="btn" id="closeRecordsBtn">关闭</button>
             </div>
         </div>
     </div>
@@ -548,10 +368,9 @@
 (function(){
     "use strict";
     
-    const STORAGE_KEY = 'yujizaowu_seats_v8';
-    const RECORDS_KEY = 'yujizaowu_records_v8';
+    const STORAGE_KEY = 'yujizaowu_seats_v9';
     const GIST_CONFIG_KEY = 'yujizaowu_gist_config';
-    const DEFAULT_SEAT_COUNT = 36;
+    const DEFAULT_SEAT_COUNT = 12;
     
     const NOTE_OPTIONS = ['', '抖音全天', '美团全天', '抖音小时', '美团小时', '__custom__'];
     const NOTE_LABELS = {
@@ -566,14 +385,13 @@
     let seats = [];
     let usageRecords = [];
     let globalTimer = null;
-    let pendingCustomSeatId = null;
-    let pendingReserveSeatId = null;
     let pendingEndSeatId = null;
     let selectedPayment = null;
     let currentFilter = 'all';
     
     let gistConfig = { gistId: '' };
     let syncStatus = 'local';
+    let proxyType = 'direct';
 
     const $ = id => document.getElementById(id);
     const toastEl = $('toast');
@@ -586,7 +404,7 @@
 
     function updateSyncUI() {
         const dot = $('syncDot');
-        const text = $('syncTextBar');
+        const text = $('syncText');
         dot.className = 'sync-dot';
         if (syncStatus === 'synced') {
             dot.classList.add('synced');
@@ -602,18 +420,40 @@
         }
     }
 
-    function loadGistConfig() {
-        try {
-            const saved = JSON.parse(localStorage.getItem(GIST_CONFIG_KEY));
-            if (saved) gistConfig = saved;
-        } catch(e) {}
-        $('gistIdInput').value = gistConfig.gistId || '';
-        updateSyncUI();
+    // 获取代理 URL
+    function getProxyUrl(originalUrl) {
+        switch (proxyType) {
+            case 'corsproxy':
+                return 'https://corsproxy.io/?' + encodeURIComponent(originalUrl);
+            case 'allorigins':
+                return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
+            case 'jsdelivr':
+                // 对于 Gist，可以用 jsDelivr
+                if (originalUrl.includes('api.github.com/gists/')) {
+                    const gistId = originalUrl.split('/').pop();
+                    return `https://cdn.jsdelivr.net/gh/gist/${gistId}/seats.json`;
+                }
+                return originalUrl;
+            default:
+                return originalUrl;
+        }
     }
 
-    function saveGistConfig() {
-        localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify(gistConfig));
-        updateSyncUI();
+    async function fetchWithProxy(url, options = {}) {
+        const proxyUrl = getProxyUrl(url);
+        console.log('请求 URL:', proxyUrl);
+        
+        try {
+            const response = await fetch(proxyUrl, options);
+            return response;
+        } catch (e) {
+            // 如果代理失败，尝试直连
+            if (proxyType !== 'direct') {
+                console.log('代理失败，尝试直连');
+                return fetch(url, options);
+            }
+            throw e;
+        }
     }
 
     async function pullFromCloud() {
@@ -626,41 +466,18 @@
         updateSyncUI();
         
         try {
-            const response = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`);
-            if (!response.ok) throw new Error('获取失败');
+            const url = `https://api.github.com/gists/${gistConfig.gistId}`;
+            const response = await fetchWithProxy(url);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const gist = await response.json();
             const files = gist.files || {};
             
-            let hasData = false;
-            
             if (files['seats.json']?.content) {
                 const cloudSeats = JSON.parse(files['seats.json'].content);
-                cloudSeats.forEach(cloudSeat => {
-                    const localSeat = seats.find(s => s.id === cloudSeat.id);
-                    if (localSeat && localSeat.running) {
-                        cloudSeat.running = localSeat.running;
-                        cloudSeat.startTimestamp = localSeat.startTimestamp;
-                        cloudSeat.accumulatedSeconds = localSeat.accumulatedSeconds;
-                    }
-                });
                 seats = cloudSeats;
-                hasData = true;
-            }
-            
-            if (files['records.json']?.content) {
-                const cloudRecords = JSON.parse(files['records.json'].content);
-                cloudRecords.forEach(r => {
-                    if (!usageRecords.some(local => local.id === r.id)) {
-                        usageRecords.push(r);
-                    }
-                });
-                hasData = true;
-            }
-            
-            if (hasData) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
                 renderAdminGrid();
                 syncStatus = 'synced';
                 showToast('✅ 拉取成功');
@@ -675,7 +492,7 @@
             console.error('拉取失败:', e);
             syncStatus = 'error';
             updateSyncUI();
-            showToast('❌ 拉取失败');
+            showToast('❌ 拉取失败: ' + e.message);
             return null;
         }
     }
@@ -690,18 +507,28 @@
         updateSyncUI();
         
         try {
-            const files = {
-                'seats.json': { content: JSON.stringify(seats) },
-                'records.json': { content: JSON.stringify(usageRecords) }
-            };
+            const url = `https://api.github.com/gists/${gistConfig.gistId}`;
             
-            const response = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`, {
+            // 推送到 Gist 不能用 CDN 代理，必须用支持 POST 的代理
+            let fetchUrl = url;
+            let fetchOptions = {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ files })
-            });
+                body: JSON.stringify({
+                    files: { 'seats.json': { content: JSON.stringify(seats) } }
+                })
+            };
             
-            if (!response.ok) throw new Error('上传失败');
+            if (proxyType === 'corsproxy') {
+                fetchUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+            } else if (proxyType === 'allorigins') {
+                // allorigins 不支持 POST，降级到直连
+                fetchUrl = url;
+            }
+            
+            const response = await fetch(fetchUrl, fetchOptions);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             syncStatus = 'synced';
             updateSyncUI();
@@ -711,7 +538,7 @@
             console.error('上传失败:', e);
             syncStatus = 'error';
             updateSyncUI();
-            showToast('❌ 上传失败');
+            showToast('❌ 上传失败: ' + e.message);
             return false;
         }
     }
@@ -723,15 +550,19 @@
             return;
         }
         
+        showToast('🔄 测试中...');
+        
         try {
-            const response = await fetch(`https://api.github.com/gists/${gistId}`);
+            const url = `https://api.github.com/gists/${gistId}`;
+            const response = await fetchWithProxy(url);
+            
             if (response.ok) {
                 showToast('✅ 连接成功');
             } else {
                 showToast('❌ Gist 不存在');
             }
         } catch (e) {
-            showToast('❌ 网络错误');
+            showToast('❌ 网络错误，尝试切换代理');
         }
     }
 
@@ -739,7 +570,7 @@
         return {
             id, name: id + '号桌', status: 'idle', timerMode: 'countup',
             countdownInitial: 3600, accumulatedSeconds: 0, running: false,
-            startTimestamp: null, notes: '', customNoteValue: '', reserved: false, reservation: null
+            startTimestamp: null, notes: '', customNoteValue: '', reserved: false
         };
     }
 
@@ -753,14 +584,6 @@
         } catch(e) {}
         seats = Array.from({length: DEFAULT_SEAT_COUNT}, (_, i) => createDefaultSeat(i+1));
         localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-    }
-    
-    function loadRecords() {
-        try { 
-            usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; 
-        } catch(e) { 
-            usageRecords = []; 
-        }
     }
     
     function getSeatIndex(id) { return seats.findIndex(s => s.id === id); }
@@ -795,7 +618,7 @@
         if (idx === -1) return;
         const seat = seats[idx];
         stopRunning(seat);
-        seat.status = 'active'; seat.reserved = false; seat.reservation = null;
+        seat.status = 'active'; seat.reserved = false;
         seat.accumulatedSeconds = 0; seat.running = false;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         renderAdminGrid(); 
@@ -806,7 +629,6 @@
         const idx = getSeatIndex(seatId);
         if (idx === -1) return;
         const seat = seats[idx];
-        if (seat.reserved) { showToast('⚠️ 已预约，请先开台'); return; }
         if (seat.status === 'idle') { showToast('⚠️ 请先开台'); return; }
         if (seat.running) return;
         seat.running = true; seat.startTimestamp = Date.now(); seat.status = 'active';
@@ -830,20 +652,16 @@
         const seat = seats[idx];
         stopRunning(seat);
         const duration = formatTime(seat.accumulatedSeconds);
-        const record = {
-            id: Date.now() + Math.random(),
+        usageRecords.push({
+            id: Date.now(),
             seatName: seat.name,
-            action: '结束使用',
             duration,
-            notes: seat.notes || '',
             paymentMethod,
             timestamp: new Date().toISOString()
-        };
-        usageRecords.push(record);
-        seat.status = 'idle'; seat.reserved = false; seat.reservation = null; 
+        });
+        seat.status = 'idle'; seat.reserved = false;
         seat.accumulatedSeconds = 0; seat.notes = ''; seat.customNoteValue = '';
         localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
         renderAdminGrid();
         showToast(`✅ ${seat.name} 结束 ${duration} · ${paymentMethod}`);
     }
@@ -869,7 +687,6 @@
         seat.accumulatedSeconds = 0;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         renderAdminGrid();
-        showToast(`🔁 ${seat.timerMode === 'countdown' ? '倒计时' : '正计时'}`);
     }
 
     function getEffectiveNote(seat) {
@@ -891,23 +708,13 @@
         renderAdminGrid();
     }
 
-    function handleCustomNoteSave(seatId, customValue) {
-        const idx = getSeatIndex(seatId);
-        if (idx === -1) return;
-        const seat = seats[idx];
-        seat.customNoteValue = customValue.trim();
-        if (seat.notes === '__custom__' || !seat.notes) seat.notes = '__custom__';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        renderAdminGrid();
-    }
-
     function showPaymentModal(seatId) {
         const idx = getSeatIndex(seatId);
         if (idx === -1) return;
         const seat = seats[idx];
         pendingEndSeatId = seatId;
         selectedPayment = null;
-        $('paymentSeatInfo').textContent = `${seat.name} · 使用时长: ${formatTime(getCurrentSeconds(seat))}`;
+        $('paymentSeatInfo').textContent = `${seat.name} · ${formatTime(getCurrentSeconds(seat))}`;
         document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
         $('confirmPaymentBtn').disabled = true;
         $('paymentModal').classList.remove('hidden');
@@ -924,8 +731,6 @@
             
             const currentNoteValue = seat.notes || '';
             const effectiveNote = getEffectiveNote(seat);
-            const customInputValue = seat.notes === '__custom__' ? (seat.customNoteValue || '') : '';
-            const showCustomInput = seat.notes === '__custom__';
             
             const optionsHtml = NOTE_OPTIONS.map(opt => {
                 const selected = currentNoteValue === opt ? 'selected' : '';
@@ -941,16 +746,15 @@
                     <div class="mode-badge">${seat.timerMode === 'countdown' ? '倒计时' : '正计时'}</div>
                     <div class="timer-display" id="timer-${seat.id}">${getTimerText(seat)}</div>
                     <div class="seat-actions">
-                        <button class="btn btn-sm" data-action="start" data-id="${seat.id}">开始</button>
-                        <button class="btn btn-sm" data-action="pause" data-id="${seat.id}">暂停</button>
-                        <button class="btn btn-sm" data-action="end" data-id="${seat.id}">结束</button>
-                        <button class="btn btn-sm" data-action="reset" data-id="${seat.id}">重置</button>
+                        <button class="btn" data-action="start" data-id="${seat.id}">开始</button>
+                        <button class="btn" data-action="pause" data-id="${seat.id}">暂停</button>
+                        <button class="btn" data-action="end" data-id="${seat.id}">结束</button>
+                        <button class="btn" data-action="reset" data-id="${seat.id}">重置</button>
                     </div>
                     <div class="seat-actions">
-                        <button class="btn btn-sm" data-action="openTable" data-id="${seat.id}">开台</button>
-                        <button class="btn btn-sm" data-action="reserve" data-id="${seat.id}">预约</button>
-                        <button class="btn btn-sm" data-action="toggleMode" data-id="${seat.id}">切换</button>
-                        <button class="btn btn-sm btn-primary" data-action="customCountdown" data-id="${seat.id}">倒计时</button>
+                        <button class="btn" data-action="openTable" data-id="${seat.id}">开台</button>
+                        <button class="btn" data-action="toggleMode" data-id="${seat.id}">切换</button>
+                        <button class="btn btn-primary" data-action="customCountdown" data-id="${seat.id}">倒计时</button>
                     </div>
                     
                     <div class="notes-selector-wrapper">
@@ -960,21 +764,8 @@
                             </select>
                             <span class="select-arrow">▼</span>
                         </div>
-                        ${showCustomInput ? `
-                        <div class="custom-note-input-wrapper">
-                            <input type="text" class="custom-note-input" placeholder="自定义备注" data-id="${seat.id}" value="${customInputValue.replace(/"/g, '&quot;')}">
-                            <button class="save-custom-btn" data-action="saveCustomNote" data-id="${seat.id}">保存</button>
-                        </div>
-                        ` : ''}
                         ${effectiveNote ? `<div class="current-note-display">📋 ${effectiveNote}</div>` : ''}
                     </div>
-                    
-                    ${seat.reserved && seat.reservation ? 
-                        `<div class="reservation-info">
-                            <span>预约: ${seat.reservation.name}</span>
-                            <button style="background:none;border:none;cursor:pointer;" data-action="cancelReserve" data-id="${seat.id}">取消</button>
-                        </div>` : ''
-                    }
                 </div>
             `;
         });
@@ -990,49 +781,7 @@
         $('statIdle').textContent = seats.filter(s => s.status === 'idle' && !s.reserved).length;
     }
 
-    function applyFilter() {
-        document.querySelectorAll('.seat-card').forEach(card => {
-            const seat = seats.find(s => s.id === parseInt(card.dataset.seatId));
-            if (!seat) return;
-            let show = true;
-            if (currentFilter === 'active') show = seat.status === 'active' && !seat.reserved;
-            else if (currentFilter === 'reserved') show = seat.reserved;
-            else if (currentFilter === 'idle') show = seat.status === 'idle' && !seat.reserved;
-            card.classList.toggle('hidden', !show);
-        });
-    }
-
-    function showRecords(dateStr) {
-        const date = dateStr || new Date().toISOString().split('T')[0];
-        $('recordDateInput').value = date;
-        const list = $('recordsList');
-        const dayRecords = usageRecords.filter(r => r.timestamp.startsWith(date));
-        if (!dayRecords.length) { 
-            list.innerHTML = '<div style="text-align:center;padding:20px;">暂无记录</div>'; 
-            return; 
-        }
-        list.innerHTML = dayRecords.map(r => `
-            <div class="record-item">
-                <strong>${r.seatName}</strong> · ${r.duration}<br>
-                <span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod || ''}</span>
-            </div>
-        `).join('');
-    }
-
-    function exportToExcel(dateStr) {
-        const date = dateStr || new Date().toISOString().split('T')[0];
-        const data = [['座位','时长','收款方式','时间']];
-        usageRecords.filter(r => r.timestamp.startsWith(date)).forEach(r => data.push([
-            r.seatName, r.duration, r.paymentMethod || '', new Date(r.timestamp).toLocaleString()
-        ]));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '记录');
-        XLSX.writeFile(wb, `记录_${date}.xlsx`);
-        showToast('✅ 导出成功');
-    }
-
     function setupEvents() {
-        // 云设置
         $('cloudSetupBtn').onclick = () => {
             $('gistIdInput').value = gistConfig.gistId || '';
             $('cloudSetupModal').classList.remove('hidden');
@@ -1040,37 +789,34 @@
         
         $('closeCloudBtn').onclick = () => $('cloudSetupModal').classList.add('hidden');
         
+        $('proxySelect').onchange = (e) => {
+            proxyType = e.target.value;
+            localStorage.setItem('proxy_type', proxyType);
+        };
+        
+        // 加载代理设置
+        const savedProxy = localStorage.getItem('proxy_type');
+        if (savedProxy) {
+            proxyType = savedProxy;
+            $('proxySelect').value = savedProxy;
+        }
+        
         $('testCloudBtn').onclick = testConnection;
-        
-        $('pullCloudBtn').onclick = async () => {
-            await pullFromCloud();
-            $('cloudSetupModal').classList.add('hidden');
-        };
-        
-        $('pushCloudBtn').onclick = async () => {
-            await pushToCloud();
-            $('cloudSetupModal').classList.add('hidden');
-        };
+        $('pullCloudBtn').onclick = pullFromCloud;
+        $('pushCloudBtn').onclick = pushToCloud;
         
         $('saveCloudBtn').onclick = () => {
             const gistId = $('gistIdInput').value.trim();
             if (gistId) {
                 gistConfig.gistId = gistId;
-                saveGistConfig();
+                localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify(gistConfig));
+                updateSyncUI();
                 showToast('✅ 配置已保存');
                 $('cloudSetupModal').classList.add('hidden');
-            } else {
-                showToast('⚠️ 请输入 Gist ID');
             }
         };
         
-        $('syncNowBtn').onclick = async () => {
-            if (gistConfig.gistId) {
-                await pullFromCloud();
-            } else {
-                showToast('⚠️ 请先设置云同步');
-            }
-        };
+        $('syncNowBtn').onclick = pullFromCloud;
         
         $('seatsContainer').onclick = e => {
             const btn = e.target.closest('[data-action]');
@@ -1082,30 +828,19 @@
             else if (action === 'end') showPaymentModal(seatId);
             else if (action === 'reset') actionReset(seatId);
             else if (action === 'openTable') actionOpenTable(seatId);
-            else if (action === 'reserve') { 
-                pendingReserveSeatId = seatId; 
-                $('reserveNameInput').value = ''; 
-                $('reserveContactInput').value = ''; 
-                $('reservationModal').classList.remove('hidden'); 
-            }
-            else if (action === 'cancelReserve') { 
-                const idx = getSeatIndex(seatId); 
-                if (idx!==-1) { 
-                    seats[idx].reserved = false; 
-                    seats[idx].reservation = null; 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                    renderAdminGrid(); 
-                } 
-            }
             else if (action === 'toggleMode') actionToggleMode(seatId);
             else if (action === 'customCountdown') { 
-                pendingCustomSeatId = seatId; 
-                $('customMinutesInput').value = '60'; 
-                $('customTimeModal').classList.remove('hidden'); 
-            }
-            else if (action === 'saveCustomNote') {
-                const input = document.querySelector(`.custom-note-input[data-id="${seatId}"]`);
-                if (input) handleCustomNoteSave(seatId, input.value);
+                const m = prompt('输入倒计时分钟数:', '60');
+                if (m) {
+                    const idx = getSeatIndex(seatId); 
+                    if(idx!==-1){ 
+                        seats[idx].countdownInitial = Math.floor(parseFloat(m)*60); 
+                        seats[idx].timerMode='countdown'; 
+                        seats[idx].accumulatedSeconds=0; 
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                        renderAdminGrid(); 
+                    }
+                }
             }
         };
 
@@ -1114,13 +849,6 @@
                 handleNoteSelect(parseInt(e.target.dataset.id), e.target.value);
             }
         };
-
-        document.querySelectorAll('.stat-card').forEach(c => c.onclick = () => {
-            currentFilter = c.dataset.filter;
-            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
-            c.classList.add('active'); 
-            applyFilter();
-        });
 
         document.querySelectorAll('.payment-option').forEach(opt => {
             opt.onclick = () => {
@@ -1140,8 +868,6 @@
 
         $('cancelPaymentBtn').onclick = () => {
             $('paymentModal').classList.add('hidden');
-            pendingEndSeatId = null;
-            selectedPayment = null;
         };
 
         $('addSeatBtn').onclick = () => { 
@@ -1171,69 +897,45 @@
         };
         
         $('viewRecordsBtn').onclick = () => { 
-            showRecords(new Date().toISOString().split('T')[0]); 
+            const html = usageRecords.slice(0, 20).map(r => 
+                `<div style="padding:8px;border-bottom:1px solid #ddd;">${r.seatName} · ${r.duration} · ${r.paymentMethod}</div>`
+            ).join('');
+            $('recordsList').innerHTML = html || '<div>暂无记录</div>';
             $('recordsModal').classList.remove('hidden'); 
         };
         
         $('closeRecordsBtn').onclick = () => $('recordsModal').classList.add('hidden');
-        $('loadRecordsBtn').onclick = () => { 
-            if($('recordDateInput').value) showRecords($('recordDateInput').value); 
-        };
-        $('exportRecordsBtn').onclick = () => exportToExcel(new Date().toISOString().split('T')[0]);
-        $('exportDayRecordsBtn').onclick = () => { 
-            exportToExcel($('recordDateInput').value); 
+        
+        $('exportRecordsBtn').onclick = () => {
+            const data = [['座位','时长','收款方式','时间']];
+            usageRecords.forEach(r => data.push([r.seatName, r.duration, r.paymentMethod||'', r.timestamp]));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '记录');
+            XLSX.writeFile(wb, '使用记录.xlsx');
+            showToast('✅ 导出成功');
         };
         
-        $('cancelCustomBtn').onclick = () => $('customTimeModal').classList.add('hidden');
-        $('confirmCustomBtn').onclick = () => {
-            const m = parseFloat($('customMinutesInput').value);
-            if (m>0 && pendingCustomSeatId) { 
-                const idx = getSeatIndex(pendingCustomSeatId); 
-                if(idx!==-1){ 
-                    stopRunning(seats[idx]); 
-                    seats[idx].countdownInitial = Math.floor(m*60); 
-                    seats[idx].timerMode='countdown'; 
-                    seats[idx].accumulatedSeconds=0; 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                    renderAdminGrid(); 
-                } 
-            }
-            $('customTimeModal').classList.add('hidden');
-        };
-        
-        $('cancelReserveBtn').onclick = () => $('reservationModal').classList.add('hidden');
-        $('confirmReserveBtn').onclick = () => {
-            const name = $('reserveNameInput').value.trim();
-            if (!name) { showToast('⚠️ 请填写姓名'); return; }
-            if (pendingReserveSeatId) { 
-                const idx = getSeatIndex(pendingReserveSeatId); 
-                if(idx!==-1){ 
-                    seats[idx].reserved=true; 
-                    seats[idx].status='idle'; 
-                    seats[idx].reservation={name, contact: $('reserveContactInput').value.trim()}; 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                    renderAdminGrid(); 
-                } 
-            }
-            $('reservationModal').classList.add('hidden');
-        };
+        document.querySelectorAll('.stat-card').forEach(c => c.onclick = () => {
+            currentFilter = c.dataset.filter;
+            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
+            c.classList.add('active');
+        });
         
         document.querySelectorAll('.modal-overlay').forEach(m => m.onclick = e => { 
             if(e.target===m) m.classList.add('hidden'); 
         });
     }
 
-    // 初始化
-    loadGistConfig();
+    // 加载配置
+    try {
+        const saved = JSON.parse(localStorage.getItem(GIST_CONFIG_KEY));
+        if (saved) gistConfig = saved;
+    } catch(e) {}
+    
     loadSeats(); 
-    loadRecords(); 
     renderAdminGrid(); 
     setupEvents();
     updateSyncUI();
-    
-    if (gistConfig.gistId) {
-        setTimeout(() => pullFromCloud(), 500);
-    }
     
     globalTimer = setInterval(() => {
         seats.forEach(s => { 
@@ -1241,7 +943,6 @@
             if(el) el.textContent = getTimerText(s); 
             if(s.timerMode==='countdown' && s.running && s.countdownInitial-getCurrentSeconds(s)<=0){ 
                 s.running=false; 
-                s.accumulatedSeconds=s.countdownInitial; 
                 s.status='paused'; 
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
                 renderAdminGrid(); 
