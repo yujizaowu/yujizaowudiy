@@ -22,87 +22,17 @@
             margin: 0 auto; 
         }
         
-        /* 云端同步设置栏 */
-        .cloud-sync-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            color: white;
-        }
-        .cloud-sync-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .cloud-sync-left label {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .cloud-sync-left input {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            width: 260px;
-            background: rgba(255,255,255,0.95);
-        }
-        .cloud-sync-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .cloud-btn {
-            background: rgba(255,255,255,0.25);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 24px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .cloud-btn:hover {
-            background: rgba(255,255,255,0.35);
-        }
-        .cloud-btn-primary {
-            background: white;
-            color: #667eea;
-            border: none;
-        }
-        .sync-status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-        }
-        .sync-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ccc;
-        }
-        .sync-dot.synced { background: #4ade80; }
-        .sync-dot.syncing { background: #fbbf24; animation: pulse 1s infinite; }
-        .sync-dot.error { background: #f87171; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
         .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 16px;
             flex-wrap: wrap;
+            gap: 8px;
+        }
+        .shop-name-wrapper {
+            display: flex;
+            align-items: center;
             gap: 8px;
         }
         .shop-name {
@@ -123,6 +53,27 @@
             gap: 6px; 
             flex-wrap: wrap; 
             align-items: center; 
+        }
+        .sync-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: #7f6a5c;
+            margin-right: 6px;
+        }
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        .sync-dot.synced { background: #4ade80; }
+        .sync-dot.syncing { background: #fbbf24; animation: pulse 1s infinite; }
+        .sync-dot.error { background: #f87171; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         .btn {
             background: #e3d9d1;
@@ -417,13 +368,25 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
-        /* 提示文字 */
         .payment-hint {
             text-align: center;
             color: #999;
             font-size: 0.75rem;
             margin-top: 8px;
+        }
+        
+        /* 云设置说明 */
+        .gist-help {
+            background: #f4ede6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.75rem;
+            color: #5f4e43;
+        }
+        .gist-help a {
+            color: #5e4b3c;
+            font-weight: 600;
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -432,31 +395,21 @@
 <div class="app">
     <div id="toast" class="toast-message"></div>
     
-    <!-- 云端同步设置栏 -->
-    <div id="cloudSyncBar" class="cloud-sync-bar">
-        <div class="cloud-sync-left">
-            <label>☁️ 云端同步</label>
-            <input type="text" id="gistIdInputBar" placeholder="输入 Gist ID" maxlength="50">
-        </div>
-        <div class="cloud-sync-actions">
-            <button class="cloud-btn" id="testSyncBarBtn">测试</button>
-            <button class="cloud-btn cloud-btn-primary" id="saveSyncBarBtn">保存</button>
-            <button class="cloud-btn" id="pullSyncBarBtn">⬇️ 拉取</button>
-            <button class="cloud-btn" id="pushSyncBarBtn">⬆️ 上传</button>
-            <div class="sync-status-badge" id="syncStatusBadge">
-                <span class="sync-dot" id="syncDot"></span>
-                <span id="syncTextBar">未配置</span>
-            </div>
-        </div>
-    </div>
-    
     <div id="adminView">
         <div class="header">
-            <div class="shop-name">
-                <span id="mainShopName">与己造物</span> 
-                <small id="shopSubtitle">· 手作时光</small>
+            <div class="shop-name-wrapper">
+                <div class="shop-name">
+                    <span id="mainShopName">与己造物</span> 
+                    <small id="shopSubtitle">· 手作时光</small>
+                </div>
             </div>
             <div class="admin-actions">
+                <div class="sync-status-badge" id="syncStatusBadge">
+                    <span class="sync-dot" id="syncDot"></span>
+                    <span id="syncTextBar">本地</span>
+                </div>
+                <button class="btn btn-sm" id="syncNowBtn" title="手动同步">🔄</button>
+                <button class="btn btn-sm" id="cloudSetupBtn" title="云同步设置">☁️</button>
                 <button class="btn btn-sm" id="addSeatBtn">+座位</button>
                 <button class="btn btn-sm" id="removeSeatBtn">-座位</button>
                 <span id="seatCountDisplay" style="margin:0 4px;">36</span>
@@ -485,6 +438,28 @@
         
         <div class="footer-note">
             <p>点击「开台」开始计时 · 结束必须选择收款方式</p>
+        </div>
+    </div>
+
+    <!-- 云同步设置模态框 -->
+    <div id="cloudSetupModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>☁️ 云端同步设置</h3>
+            <div class="gist-help">
+                👉 <a href="https://gist.github.com/" target="_blank">点击创建 Gist</a>，复制网址末尾32位字符<br>
+                多设备输入相同 Gist ID 即可同步数据
+            </div>
+            <div class="modal-input-group">
+                <label>Gist ID</label>
+                <input type="text" id="gistIdInput" placeholder="粘贴32位 Gist ID">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="testCloudBtn">测试连接</button>
+                <button class="btn" id="pullCloudBtn">⬇️ 拉取</button>
+                <button class="btn" id="pushCloudBtn">⬆️ 上传</button>
+                <button class="btn" id="closeCloudBtn">关闭</button>
+                <button class="btn btn-primary" id="saveCloudBtn">保存</button>
+            </div>
         </div>
     </div>
 
@@ -537,7 +512,7 @@
         </div>
     </div>
 
-    <!-- 收款模态框 - 移除了跳过按钮 -->
+    <!-- 收款模态框 -->
     <div id="paymentModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>💰 选择收款方式</h3>
@@ -560,9 +535,7 @@
                     <div class="payment-name">微信</div>
                 </div>
             </div>
-            <div class="payment-hint">
-                👆 请选择一种收款方式
-            </div>
+            <div class="payment-hint">👆 请选择一种收款方式</div>
             <div class="modal-actions">
                 <button class="btn" id="cancelPaymentBtn">取消</button>
                 <button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button>
@@ -575,8 +548,8 @@
 (function(){
     "use strict";
     
-    const STORAGE_KEY = 'yujizaowu_seats_v7';
-    const RECORDS_KEY = 'yujizaowu_records_v7';
+    const STORAGE_KEY = 'yujizaowu_seats_v8';
+    const RECORDS_KEY = 'yujizaowu_records_v8';
     const GIST_CONFIG_KEY = 'yujizaowu_gist_config';
     const DEFAULT_SEAT_COUNT = 36;
     
@@ -599,7 +572,7 @@
     let selectedPayment = null;
     let currentFilter = 'all';
     
-    let gistConfig = { gistId: 'fffd6e64e8ae3d70cee6c7e0b1ba3cc2' };
+    let gistConfig = { gistId: '' };
     let syncStatus = 'local';
 
     const $ = id => document.getElementById(id);
@@ -625,7 +598,7 @@
             dot.classList.add('error');
             text.textContent = '失败';
         } else {
-            text.textContent = gistConfig.gistId ? '已配置' : '未配置';
+            text.textContent = gistConfig.gistId ? '已配置' : '本地';
         }
     }
 
@@ -634,7 +607,7 @@
             const saved = JSON.parse(localStorage.getItem(GIST_CONFIG_KEY));
             if (saved) gistConfig = saved;
         } catch(e) {}
-        $('gistIdInputBar').value = gistConfig.gistId || '';
+        $('gistIdInput').value = gistConfig.gistId || '';
         updateSyncUI();
     }
 
@@ -744,7 +717,7 @@
     }
 
     async function testConnection() {
-        const gistId = $('gistIdInputBar').value.trim();
+        const gistId = $('gistIdInput').value.trim();
         if (!gistId) {
             showToast('⚠️ 请输入 Gist ID');
             return;
@@ -1059,16 +1032,43 @@
     }
 
     function setupEvents() {
-        $('testSyncBarBtn').onclick = testConnection;
-        $('pullSyncBarBtn').onclick = pullFromCloud;
-        $('pushSyncBarBtn').onclick = pushToCloud;
+        // 云设置
+        $('cloudSetupBtn').onclick = () => {
+            $('gistIdInput').value = gistConfig.gistId || '';
+            $('cloudSetupModal').classList.remove('hidden');
+        };
         
-        $('saveSyncBarBtn').onclick = () => {
-            const gistId = $('gistIdInputBar').value.trim();
+        $('closeCloudBtn').onclick = () => $('cloudSetupModal').classList.add('hidden');
+        
+        $('testCloudBtn').onclick = testConnection;
+        
+        $('pullCloudBtn').onclick = async () => {
+            await pullFromCloud();
+            $('cloudSetupModal').classList.add('hidden');
+        };
+        
+        $('pushCloudBtn').onclick = async () => {
+            await pushToCloud();
+            $('cloudSetupModal').classList.add('hidden');
+        };
+        
+        $('saveCloudBtn').onclick = () => {
+            const gistId = $('gistIdInput').value.trim();
             if (gistId) {
                 gistConfig.gistId = gistId;
                 saveGistConfig();
                 showToast('✅ 配置已保存');
+                $('cloudSetupModal').classList.add('hidden');
+            } else {
+                showToast('⚠️ 请输入 Gist ID');
+            }
+        };
+        
+        $('syncNowBtn').onclick = async () => {
+            if (gistConfig.gistId) {
+                await pullFromCloud();
+            } else {
+                showToast('⚠️ 请先设置云同步');
             }
         };
         
@@ -1122,7 +1122,6 @@
             applyFilter();
         });
 
-        // 收款方式选择
         document.querySelectorAll('.payment-option').forEach(opt => {
             opt.onclick = () => {
                 document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
@@ -1132,7 +1131,6 @@
             };
         });
 
-        // 确认结束（必须选择收款方式）
         $('confirmPaymentBtn').onclick = () => {
             if (pendingEndSeatId && selectedPayment) {
                 actionEndWithPayment(pendingEndSeatId, selectedPayment);
@@ -1140,7 +1138,6 @@
             }
         };
 
-        // 取消按钮 - 关闭弹窗但不结束
         $('cancelPaymentBtn').onclick = () => {
             $('paymentModal').classList.add('hidden');
             pendingEndSeatId = null;
