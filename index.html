@@ -14,64 +14,113 @@
             font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif;
             background: #f7f5f2;
             color: #2e241f;
-            padding: 16px;
+            padding: 12px;
             min-height: 100vh;
         }
         .app { 
             max-width: 1800px; 
             margin: 0 auto; 
         }
-        .header {
+        
+        /* 云端同步设置栏 */
+        .cloud-sync-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
             flex-wrap: wrap;
+            gap: 10px;
+            color: white;
+        }
+        .cloud-sync-left {
+            display: flex;
+            align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
-        .shop-name-wrapper {
+        .cloud-sync-left label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .cloud-sync-left input {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            width: 260px;
+            background: rgba(255,255,255,0.95);
+        }
+        .cloud-sync-actions {
             display: flex;
-            align-items: center;
             gap: 8px;
         }
-        .shop-name {
-            font-size: 1.5rem;
-            font-weight: 400;
-            letter-spacing: 4px;
-            color: #3b2b24;
-            border-left: 5px solid #b28b6f;
-            padding-left: 20px;
+        .cloud-btn {
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
+            font-weight: 500;
+            transition: all 0.15s;
+            white-space: nowrap;
         }
-        .shop-name small { 
-            font-size: 0.9rem; 
-            color: #7f6a5c; 
-            margin-left: 8px; 
+        .cloud-btn:hover {
+            background: rgba(255,255,255,0.35);
         }
-        .sync-status {
+        .cloud-btn-primary {
+            background: white;
+            color: #667eea;
+            border: none;
+        }
+        .sync-status-badge {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 0.8rem;
-            color: #7f6a5c;
         }
-        .sync-indicator {
-            width: 10px;
-            height: 10px;
+        .sync-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #ccc;
         }
-        .sync-indicator.synced { background: #4a7c59; }
-        .sync-indicator.syncing { background: #f39c12; animation: pulse 1s infinite; }
-        .sync-indicator.error { background: #c0392b; }
+        .sync-dot.synced { background: #4ade80; }
+        .sync-dot.syncing { background: #fbbf24; animation: pulse 1s infinite; }
+        .sync-dot.error { background: #f87171; }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .shop-name {
+            font-size: 1.4rem;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: #3b2b24;
+            border-left: 4px solid #b28b6f;
+            padding-left: 14px;
+        }
+        .shop-name small { 
+            font-size: 0.85rem; 
+            color: #7f6a5c; 
+            margin-left: 6px; 
+        }
         .admin-actions { 
             display: flex; 
-            gap: 8px; 
+            gap: 6px; 
             flex-wrap: wrap; 
             align-items: center; 
         }
@@ -79,9 +128,9 @@
             background: #e3d9d1;
             border: 1px solid #b8a69a;
             color: #2e241f;
-            padding: 8px 12px;
-            border-radius: 30px;
-            font-size: 0.85rem;
+            padding: 7px 12px;
+            border-radius: 24px;
+            font-size: 0.8rem;
             cursor: pointer;
             font-weight: 500;
             user-select: none;
@@ -102,58 +151,59 @@
             color: #fff; 
         }
         .btn-sm { 
-            padding: 4px 8px; 
+            padding: 5px 10px; 
             font-size: 0.75rem; 
         }
         .stats-bar { 
             display: flex; 
-            gap: 12px; 
-            margin-bottom: 16px; 
+            gap: 10px; 
+            margin-bottom: 14px; 
             flex-wrap: wrap; 
         }
         .stat-card {
             background: #fefcf9;
             border-radius: 20px;
-            padding: 10px 20px;
+            padding: 8px 18px;
             border: 1px solid #e2d6cd;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .stat-card.active { 
             background: #5e4b3c; 
             color: #fdf6ef; 
         }
         .stat-number { 
-            font-size: 1.5rem; 
+            font-size: 1.4rem; 
             font-weight: 600; 
-            min-width: 40px; 
+            min-width: 35px; 
         }
         .seats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 12px;
         }
         .seat-card {
             background: #fefcf9;
-            border-radius: 16px;
+            border-radius: 14px;
             padding: 12px;
             border: 1px solid #e2d6cd;
         }
+        .seat-card.hidden { display: none; }
         .seat-header { 
             display: flex; 
             justify-content: space-between; 
-            margin-bottom: 8px; 
+            margin-bottom: 6px; 
         }
         .seat-name { 
             font-weight: 700; 
-            font-size: 1.1rem; 
+            font-size: 1rem; 
         }
         .seat-status {
-            font-size: 0.65rem;
-            padding: 3px 6px;
+            font-size: 0.6rem;
+            padding: 2px 6px;
             border-radius: 20px;
             background: #ede6df;
         }
@@ -163,95 +213,95 @@
         .status-idle { background: #e5dfd9; }
         .timer-display {
             font-family: 'Courier New', monospace;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             text-align: center;
-            margin: 8px 0;
+            margin: 6px 0;
             background: #f3ede7;
-            padding: 6px 0;
-            border-radius: 12px;
+            padding: 5px 0;
+            border-radius: 10px;
         }
         .mode-badge {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             background: #cfc1b6;
             display: inline-block;
-            padding: 3px 8px;
+            padding: 2px 8px;
             border-radius: 20px;
-            margin: 0 auto 6px;
+            margin: 0 auto 5px;
             text-align: center;
         }
         .seat-actions { 
             display: flex; 
             flex-wrap: wrap; 
             gap: 4px; 
-            margin: 6px 0; 
+            margin: 5px 0; 
         }
         .seat-actions .btn { 
-            flex: 1 0 40px; 
-            padding: 5px 2px; 
-            font-size: 0.65rem; 
+            flex: 1 0 35px; 
+            padding: 4px 2px; 
+            font-size: 0.6rem; 
         }
         .notes-selector-wrapper {
-            margin-top: 8px;
+            margin-top: 6px;
             border-top: 1px dashed #d6c9bf;
-            padding-top: 8px;
+            padding-top: 6px;
         }
         .custom-select-wrapper {
             position: relative;
         }
         .notes-select {
             width: 100%;
-            padding: 6px 24px 6px 10px;
+            padding: 5px 20px 5px 8px;
             border: 1px solid #d6c9bf;
-            border-radius: 20px;
-            font-size: 0.7rem;
+            border-radius: 16px;
+            font-size: 0.65rem;
             background: #fffbf8;
             cursor: pointer;
             appearance: none;
         }
         .select-arrow {
             position: absolute;
-            right: 10px;
+            right: 8px;
             top: 50%;
             transform: translateY(-50%);
             pointer-events: none;
             color: #7f6a5c;
-            font-size: 0.8rem;
+            font-size: 0.7rem;
         }
         .custom-note-input-wrapper {
             display: flex;
             gap: 4px;
-            margin-top: 6px;
+            margin-top: 5px;
         }
         .custom-note-input {
             flex: 1;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border: 1px solid #d6c9bf;
-            border-radius: 20px;
-            font-size: 0.65rem;
+            border-radius: 16px;
+            font-size: 0.6rem;
             background: #fffbf8;
         }
         .save-custom-btn {
-            padding: 4px 8px;
+            padding: 3px 6px;
             background: #e3d9d1;
             border: 1px solid #b8a69a;
-            border-radius: 20px;
-            font-size: 0.6rem;
+            border-radius: 16px;
+            font-size: 0.55rem;
             cursor: pointer;
         }
         .current-note-display {
             margin-top: 4px;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: #5e4b3c;
-            padding: 3px 6px;
+            padding: 2px 5px;
             background: #f4ede6;
-            border-radius: 12px;
+            border-radius: 10px;
         }
         .reservation-info {
-            margin-top: 6px;
-            padding: 4px 8px;
+            margin-top: 5px;
+            padding: 3px 6px;
             background: #f4ede6;
-            border-radius: 12px;
-            font-size: 0.6rem;
+            border-radius: 10px;
+            font-size: 0.55rem;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -298,20 +348,20 @@
         .modal h3 { 
             margin-bottom: 16px; 
             color: #3b2b24; 
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
         .modal-input-group { margin-bottom: 14px; }
         .modal-input-group label { 
             display: block; 
             margin-bottom: 5px; 
             color: #5f4e43; 
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
         .modal-input-group input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 12px;
             border: 1px solid #d6c9bf;
-            border-radius: 24px;
+            border-radius: 20px;
             font-size: 0.9rem;
             background: #fffbf8;
         }
@@ -322,31 +372,31 @@
             margin-top: 20px; 
         }
         .records-list { 
-            margin: 16px 0; 
-            max-height: 300px; 
+            margin: 14px 0; 
+            max-height: 280px; 
             overflow-y: auto; 
         }
         .record-item {
-            padding: 8px 12px;
+            padding: 7px 10px;
             border-bottom: 1px solid #e2d6cd;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
         .footer-note {
-            margin-top: 20px;
+            margin-top: 16px;
             color: #a28d7e;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-align: center;
             border-top: 1px dashed #d9ccc2;
-            padding-top: 12px;
+            padding-top: 10px;
         }
         .payment-methods {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin: 16px 0;
+            margin: 14px 0;
         }
         .payment-option {
-            padding: 12px 10px;
+            padding: 12px 8px;
             border: 2px solid #d6c9bf;
             border-radius: 12px;
             text-align: center;
@@ -360,30 +410,12 @@
             color: #fdf6ef;
         }
         .payment-option .payment-icon {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin-bottom: 4px;
         }
         .payment-option .payment-name {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 500;
-        }
-        .gist-settings {
-            margin-bottom: 16px;
-            padding: 12px;
-            background: #f4ede6;
-            border-radius: 12px;
-        }
-        .gist-settings input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d6c9bf;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-top: 6px;
-        }
-        .gist-settings small {
-            color: #7f6a5c;
-            font-size: 0.7rem;
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -392,24 +424,34 @@
 <div class="app">
     <div id="toast" class="toast-message"></div>
     
+    <!-- 云端同步设置栏 -->
+    <div id="cloudSyncBar" class="cloud-sync-bar">
+        <div class="cloud-sync-left">
+            <label>☁️ 云端同步</label>
+            <input type="text" id="gistIdInputBar" placeholder="输入 Gist ID" maxlength="50">
+        </div>
+        <div class="cloud-sync-actions">
+            <button class="cloud-btn" id="testSyncBarBtn">测试</button>
+            <button class="cloud-btn cloud-btn-primary" id="saveSyncBarBtn">保存</button>
+            <button class="cloud-btn" id="pullSyncBarBtn">⬇️ 拉取</button>
+            <button class="cloud-btn" id="pushSyncBarBtn">⬆️ 上传</button>
+            <div class="sync-status-badge" id="syncStatusBadge">
+                <span class="sync-dot" id="syncDot"></span>
+                <span id="syncTextBar">未配置</span>
+            </div>
+        </div>
+    </div>
+    
     <div id="adminView">
         <div class="header">
-            <div class="shop-name-wrapper">
-                <div id="shopNameDisplay" class="shop-name">
-                    <span id="mainShopName">与己造物</span> 
-                    <small id="shopSubtitle">· 手作时光</small>
-                </div>
-                <div class="sync-status">
-                    <span class="sync-indicator" id="syncIndicator"></span>
-                    <span id="syncText">本地</span>
-                </div>
+            <div class="shop-name">
+                <span id="mainShopName">与己造物</span> 
+                <small id="shopSubtitle">· 手作时光</small>
             </div>
             <div class="admin-actions">
-                <button class="btn btn-sm" id="syncNowBtn" title="立即同步">🔄 同步</button>
-                <button class="btn btn-sm" id="setupGistBtn" title="设置云同步">⚙️ 云设置</button>
                 <button class="btn btn-sm" id="addSeatBtn">+座位</button>
                 <button class="btn btn-sm" id="removeSeatBtn">-座位</button>
-                <span id="seatCountDisplay" style="margin:0 4px; color:#5f4e43;">36</span>
+                <span id="seatCountDisplay" style="margin:0 4px;">36</span>
                 <button class="btn btn-sm btn-primary" id="resetAllIdleBtn">全部空闲</button>
                 <button class="btn btn-sm btn-success" id="viewRecordsBtn">记录</button>
                 <button class="btn btn-sm btn-success" id="exportRecordsBtn">导出</button>
@@ -418,54 +460,27 @@
         
         <div class="stats-bar">
             <div class="stat-card active" data-filter="all">
-                <span class="stat-number" id="statAll">36</span>
-                <span>全部</span>
+                <span class="stat-number" id="statAll">36</span><span>全部</span>
             </div>
             <div class="stat-card" data-filter="active">
-                <span class="stat-number" id="statActive">0</span>
-                <span>使用中</span>
+                <span class="stat-number" id="statActive">0</span><span>使用中</span>
             </div>
             <div class="stat-card" data-filter="reserved">
-                <span class="stat-number" id="statReserved">0</span>
-                <span>已预约</span>
+                <span class="stat-number" id="statReserved">0</span><span>已预约</span>
             </div>
             <div class="stat-card" data-filter="idle">
-                <span class="stat-number" id="statIdle">36</span>
-                <span>空闲</span>
+                <span class="stat-number" id="statIdle">36</span><span>空闲</span>
             </div>
         </div>
         
         <div id="seatsContainer" class="seats-grid"></div>
         
         <div class="footer-note">
-            <p>开台后计时 · 结束可选收款 · 支持云端同步</p>
+            <p>点击「开台」开始计时 · 结束时可选择收款方式</p>
         </div>
     </div>
 
-    <!-- 云同步设置模态框 -->
-    <div id="gistSettingsModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>☁️ 云端同步设置</h3>
-            <div class="gist-settings">
-                <p style="margin-bottom: 12px; font-size: 0.85rem;">
-                    使用 GitHub Gist 实现多设备数据同步。<br>
-                    <a href="https://gist.github.com/" target="_blank" style="color: #5e4b3c;">创建 Gist →</a>
-                </p>
-                <label style="font-size: 0.8rem;">Gist ID (32位字符)</label>
-                <input type="text" id="gistIdInput" placeholder="例如: a1b2c3d4e5f6..." maxlength="50">
-                <label style="font-size: 0.8rem; margin-top: 10px; display: block;">GitHub Token (可选，避免限流)</label>
-                <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx">
-                <small>不填 Token 也可以使用，但每小时请求次数有限</small>
-            </div>
-            <div class="modal-actions">
-                <button class="btn" id="testSyncBtn">测试连接</button>
-                <button class="btn" id="closeGistSettingsBtn">取消</button>
-                <button class="btn btn-primary" id="saveGistSettingsBtn">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 其他模态框保持不变 -->
+    <!-- 记录模态框 -->
     <div id="recordsModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>每日使用记录</h3>
@@ -473,9 +488,7 @@
                 <input type="date" id="recordDateInput" style="flex:1; padding:8px; border-radius:20px; border:1px solid #d6c9bf;">
                 <button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button>
             </div>
-            <div class="records-list" id="recordsList">
-                <div style="text-align:center; color:#999; padding:20px;">请选择日期</div>
-            </div>
+            <div class="records-list" id="recordsList"></div>
             <div class="modal-actions">
                 <button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button>
                 <button class="btn btn-sm" id="closeRecordsBtn">关闭</button>
@@ -483,13 +496,13 @@
         </div>
     </div>
 
+    <!-- 倒计时模态框 -->
     <div id="customTimeModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>设置倒计时</h3>
             <div class="modal-input-group">
                 <input type="number" id="customMinutesInput" placeholder="分钟数" min="0.1" value="60" step="0.5">
             </div>
-            <div style="color:#7f6a5c; margin-bottom:16px; font-size:0.8rem;">支持小数，如 1.5 = 1分30秒</div>
             <div class="modal-actions">
                 <button class="btn" id="cancelCustomBtn">取消</button>
                 <button class="btn btn-primary" id="confirmCustomBtn">确定</button>
@@ -497,12 +510,13 @@
         </div>
     </div>
 
+    <!-- 预约模态框 -->
     <div id="reservationModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>填写预约信息</h3>
             <div class="modal-input-group">
-                <label>顾客姓名 <span style="color:#c0392b;">*</span></label>
-                <input type="text" id="reserveNameInput" placeholder="姓名" maxlength="50">
+                <label>顾客姓名 *</label>
+                <input type="text" id="reserveNameInput" placeholder="姓名">
             </div>
             <div class="modal-input-group">
                 <label>联系方式</label>
@@ -515,10 +529,11 @@
         </div>
     </div>
 
+    <!-- 收款模态框 -->
     <div id="paymentModal" class="modal-overlay hidden">
         <div class="modal">
             <h3>选择收款方式</h3>
-            <div style="margin-bottom:12px; color:#5f4e43;" id="paymentSeatInfo"></div>
+            <div id="paymentSeatInfo" style="margin-bottom:12px;"></div>
             <div class="payment-methods">
                 <div class="payment-option" data-payment="抖音团购">
                     <div class="payment-icon">🎵</div>
@@ -549,9 +564,8 @@
 (function(){
     "use strict";
     
-    const STORAGE_KEY = 'yujizaowu_seats_v5';
-    const RECORDS_KEY = 'yujizaowu_records_v5';
-    const SHOP_NAME_KEY = 'yujizaowu_shop_name';
+    const STORAGE_KEY = 'yujizaowu_seats_v7';
+    const RECORDS_KEY = 'yujizaowu_records_v7';
     const GIST_CONFIG_KEY = 'yujizaowu_gist_config';
     const DEFAULT_SEAT_COUNT = 36;
     
@@ -573,12 +587,9 @@
     let pendingEndSeatId = null;
     let selectedPayment = null;
     let currentFilter = 'all';
-    let shopName = { main: '与己造物', subtitle: '· 手作时光' };
     
-    // 云端同步配置
-    let gistConfig = { gistId: '', token: '' };
-    let syncStatus = 'local'; // local, syncing, synced, error
-    let syncTimer = null;
+    let gistConfig = { gistId: 'fffd6e64e8ae3d70cee6c7e0b1ba3cc2' };
+    let syncStatus = 'local';
 
     const $ = id => document.getElementById(id);
     const toastEl = $('toast');
@@ -590,234 +601,165 @@
     }
 
     function updateSyncUI() {
-        const indicator = $('syncIndicator');
-        const text = $('syncText');
-        indicator.className = 'sync-indicator';
+        const dot = $('syncDot');
+        const text = $('syncTextBar');
+        dot.className = 'sync-dot';
         if (syncStatus === 'synced') {
-            indicator.classList.add('synced');
+            dot.classList.add('synced');
             text.textContent = '已同步';
         } else if (syncStatus === 'syncing') {
-            indicator.classList.add('syncing');
+            dot.classList.add('syncing');
             text.textContent = '同步中';
         } else if (syncStatus === 'error') {
-            indicator.classList.add('error');
-            text.textContent = '同步失败';
+            dot.classList.add('error');
+            text.textContent = '失败';
         } else {
-            text.textContent = '本地';
+            text.textContent = gistConfig.gistId ? '已配置' : '未配置';
         }
     }
 
-    // 加载 Gist 配置
     function loadGistConfig() {
         try {
             const saved = JSON.parse(localStorage.getItem(GIST_CONFIG_KEY));
             if (saved) gistConfig = saved;
         } catch(e) {}
+        $('gistIdInputBar').value = gistConfig.gistId || '';
+        updateSyncUI();
     }
 
     function saveGistConfig() {
         localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify(gistConfig));
+        updateSyncUI();
     }
 
-    // 从 Gist 拉取数据
-    async function pullFromGist() {
-        if (!gistConfig.gistId) return null;
+    // ========== 拉取云端数据 ==========
+    async function pullFromCloud() {
+        if (!gistConfig.gistId) {
+            showToast('⚠️ 请先配置 Gist ID');
+            return null;
+        }
+        
+        syncStatus = 'syncing';
+        updateSyncUI();
         
         try {
-            const headers = {};
-            if (gistConfig.token) {
-                headers['Authorization'] = `token ${gistConfig.token}`;
-            }
-            
-            const response = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`, { headers });
+            const response = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`);
             if (!response.ok) throw new Error('获取失败');
             
             const gist = await response.json();
             const files = gist.files || {};
             
-            let data = {};
-            if (files['seats.json'] && files['seats.json'].content) {
-                data.seats = JSON.parse(files['seats.json'].content);
-            }
-            if (files['records.json'] && files['records.json'].content) {
-                data.records = JSON.parse(files['records.json'].content);
-            }
-            if (files['shop.json'] && files['shop.json'].content) {
-                data.shopName = JSON.parse(files['shop.json'].content);
+            let hasData = false;
+            
+            // 拉取座位数据
+            if (files['seats.json']?.content) {
+                const cloudSeats = JSON.parse(files['seats.json'].content);
+                // 合并策略：保留本地正在运行的状态
+                cloudSeats.forEach(cloudSeat => {
+                    const localSeat = seats.find(s => s.id === cloudSeat.id);
+                    if (localSeat && localSeat.running) {
+                        // 如果本地正在运行，保持本地状态
+                        cloudSeat.running = localSeat.running;
+                        cloudSeat.startTimestamp = localSeat.startTimestamp;
+                        cloudSeat.accumulatedSeconds = localSeat.accumulatedSeconds;
+                    }
+                });
+                seats = cloudSeats;
+                hasData = true;
             }
             
-            return data;
+            // 拉取记录数据
+            if (files['records.json']?.content) {
+                const cloudRecords = JSON.parse(files['records.json'].content);
+                // 合并去重
+                cloudRecords.forEach(r => {
+                    if (!usageRecords.some(local => local.id === r.id)) {
+                        usageRecords.push(r);
+                    }
+                });
+                hasData = true;
+            }
+            
+            if (hasData) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
+                renderAdminGrid();
+                syncStatus = 'synced';
+                showToast('✅ 拉取成功');
+            } else {
+                syncStatus = 'synced';
+                showToast('ℹ️ 云端暂无数据');
+            }
+            
+            updateSyncUI();
+            return true;
         } catch (e) {
             console.error('拉取失败:', e);
+            syncStatus = 'error';
+            updateSyncUI();
+            showToast('❌ 拉取失败: ' + e.message);
             return null;
         }
     }
 
-    // 推送到 Gist
-    async function pushToGist(data) {
-        if (!gistConfig.gistId) return false;
+    // ========== 上传到云端 ==========
+    async function pushToCloud() {
+        if (!gistConfig.gistId) {
+            showToast('⚠️ 请先配置 Gist ID');
+            return false;
+        }
         
         syncStatus = 'syncing';
         updateSyncUI();
         
         try {
-            const headers = {
-                'Content-Type': 'application/json',
+            const files = {
+                'seats.json': { content: JSON.stringify(seats) },
+                'records.json': { content: JSON.stringify(usageRecords) }
             };
-            if (gistConfig.token) {
-                headers['Authorization'] = `token ${gistConfig.token}`;
-            }
-            
-            const files = {};
-            if (data.seats) files['seats.json'] = { content: JSON.stringify(data.seats) };
-            if (data.records) files['records.json'] = { content: JSON.stringify(data.records) };
-            if (data.shopName) files['shop.json'] = { content: JSON.stringify(data.shopName) };
             
             const response = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`, {
                 method: 'PATCH',
-                headers,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ files })
             });
             
-            if (!response.ok) throw new Error('推送失败');
+            if (!response.ok) throw new Error('上传失败');
             
             syncStatus = 'synced';
             updateSyncUI();
+            showToast('✅ 上传成功');
             return true;
         } catch (e) {
-            console.error('推送失败:', e);
+            console.error('上传失败:', e);
             syncStatus = 'error';
             updateSyncUI();
+            showToast('❌ 上传失败: ' + e.message);
             return false;
         }
     }
 
-    // 同步数据（双向）
-    async function syncData(showToastMsg = true) {
-        if (!gistConfig.gistId) {
-            if (showToastMsg) showToast('⚠️ 请先设置云端同步', 2000);
+    // ========== 测试连接 ==========
+    async function testConnection() {
+        const gistId = $('gistIdInputBar').value.trim();
+        if (!gistId) {
+            showToast('⚠️ 请输入 Gist ID');
             return;
         }
         
-        syncStatus = 'syncing';
-        updateSyncUI();
-        
         try {
-            // 先从云端拉取
-            const cloudData = await pullFromGist();
-            
-            if (cloudData) {
-                let hasCloudUpdate = false;
-                
-                // 比较时间戳决定使用哪个数据（简单处理：如果云端有数据就合并）
-                if (cloudData.seats) {
-                    // 合并策略：保留本地的运行状态，但更新其他数据
-                    const localSeats = [...seats];
-                    const cloudSeats = cloudData.seats;
-                    
-                    cloudSeats.forEach((cloudSeat, idx) => {
-                        const localSeat = localSeats.find(s => s.id === cloudSeat.id);
-                        if (localSeat) {
-                            // 如果本地正在运行，保留运行状态
-                            if (localSeat.running) {
-                                cloudSeat.running = localSeat.running;
-                                cloudSeat.startTimestamp = localSeat.startTimestamp;
-                                cloudSeat.accumulatedSeconds = localSeat.accumulatedSeconds;
-                            }
-                        }
-                    });
-                    
-                    seats = cloudSeats;
-                    hasCloudUpdate = true;
-                }
-                
-                if (cloudData.records) {
-                    // 合并记录，去重
-                    const mergedRecords = [...usageRecords];
-                    cloudData.records.forEach(r => {
-                        if (!mergedRecords.some(m => m.id === r.id)) {
-                            mergedRecords.push(r);
-                        }
-                    });
-                    usageRecords = mergedRecords;
-                    hasCloudUpdate = true;
-                }
-                
-                if (cloudData.shopName) {
-                    shopName = cloudData.shopName;
-                    updateShopNameDisplay();
-                    hasCloudUpdate = true;
-                }
-                
-                if (hasCloudUpdate) {
-                    saveSeats();
-                    saveRecords();
-                    saveShopName();
-                    renderAdminGrid();
-                }
+            const response = await fetch(`https://api.github.com/gists/${gistId}`);
+            if (response.ok) {
+                showToast('✅ 连接成功');
+            } else {
+                showToast('❌ Gist 不存在');
             }
-            
-            // 推送到云端
-            await pushToGist({
-                seats: seats.map(s => ({...s})), // 深拷贝
-                records: usageRecords,
-                shopName
-            });
-            
-            if (showToastMsg) showToast('✅ 同步成功', 1500);
         } catch (e) {
-            syncStatus = 'error';
-            updateSyncUI();
-            if (showToastMsg) showToast('❌ 同步失败', 2000);
+            showToast('❌ 网络错误');
         }
     }
 
-    function loadShopName() {
-        try { 
-            const saved = JSON.parse(localStorage.getItem(SHOP_NAME_KEY));
-            if (saved && saved.main) { 
-                shopName = saved; 
-            }
-        } catch(e) {}
-        updateShopNameDisplay();
-    }
-    
-    function saveShopName() { 
-        localStorage.setItem(SHOP_NAME_KEY, JSON.stringify(shopName)); 
-    }
-    
-    function updateShopNameDisplay() {
-        $('mainShopName').textContent = shopName.main;
-        $('shopSubtitle').textContent = shopName.subtitle || '';
-        document.title = shopName.main + ' · 手工店计时';
-    }
-
-    function loadRecords() {
-        try { usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; } 
-        catch(e) { usageRecords = []; }
-    }
-    
-    function saveRecords() { localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords)); }
-    
-    function addRecord(seatName, action, duration, notes, paymentMethod) {
-        const record = {
-            id: Date.now() + Math.random(),
-            seatName, action, duration, notes: notes || '',
-            timestamp: new Date().toISOString()
-        };
-        if (paymentMethod) {
-            record.paymentMethod = paymentMethod;
-            record.notes = record.notes + (record.notes ? ' | ' : '') + '收款: ' + paymentMethod;
-        }
-        usageRecords.push(record);
-        saveRecords();
-        
-        // 自动同步
-        if (gistConfig.gistId) {
-            syncData(false);
-        }
-    }
-
+    // ========== 座位相关函数 ==========
     function createDefaultSeat(id) {
         return {
             id, name: id + '号桌', status: 'idle', timerMode: 'countup',
@@ -831,18 +773,21 @@
             const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
             if (Array.isArray(parsed) && parsed.length) { 
                 seats = parsed; 
-                seats.forEach(s => { 
-                    if (s.notes === undefined) s.notes = '';
-                    if (s.customNoteValue === undefined) s.customNoteValue = '';
-                });
                 return; 
             }
         } catch(e) {}
         seats = Array.from({length: DEFAULT_SEAT_COUNT}, (_, i) => createDefaultSeat(i+1));
-        saveSeats();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
     }
     
-    function saveSeats() { localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }
+    function loadRecords() {
+        try { 
+            usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; 
+        } catch(e) { 
+            usageRecords = []; 
+        }
+    }
+    
     function getSeatIndex(id) { return seats.findIndex(s => s.id === id); }
 
     function getCurrentSeconds(seat) {
@@ -877,29 +822,31 @@
         stopRunning(seat);
         seat.status = 'active'; seat.reserved = false; seat.reservation = null;
         seat.accumulatedSeconds = 0; seat.running = false;
-        refreshUI(); 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        renderAdminGrid(); 
         showToast(`✅ ${seat.name} 已开台`);
-        if (gistConfig.gistId) syncData(false);
     }
 
     function actionStart(seatId) {
         const idx = getSeatIndex(seatId);
         if (idx === -1) return;
         const seat = seats[idx];
-        if (seat.reserved) { showToast('⚠️ 该座位已预约，请先开台'); return; }
-        if (seat.status === 'idle') { showToast('⚠️ 请先「开台」再开始计时'); return; }
+        if (seat.reserved) { showToast('⚠️ 已预约，请先开台'); return; }
+        if (seat.status === 'idle') { showToast('⚠️ 请先开台'); return; }
         if (seat.running) return;
         seat.running = true; seat.startTimestamp = Date.now(); seat.status = 'active';
-        refreshUI();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        renderAdminGrid();
     }
 
     function actionPause(seatId) {
         const idx = getSeatIndex(seatId);
         if (idx === -1) return;
-        stopRunning(seats[idx]); seats[idx].status = 'paused';
-        refreshUI(); 
+        stopRunning(seats[idx]); 
+        seats[idx].status = 'paused';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        renderAdminGrid(); 
         showToast(`⏸️ ${seats[idx].name} 已暂停`);
-        if (gistConfig.gistId) syncData(false);
     }
 
     function actionEndWithPayment(seatId, paymentMethod) {
@@ -907,15 +854,23 @@
         if (idx === -1) return;
         const seat = seats[idx];
         stopRunning(seat);
-        const finalNote = getEffectiveNote(seat);
         const duration = formatTime(seat.accumulatedSeconds);
-        addRecord(seat.name, '结束使用', duration, finalNote, paymentMethod);
+        const record = {
+            id: Date.now() + Math.random(),
+            seatName: seat.name,
+            action: '结束使用',
+            duration,
+            notes: seat.notes || '',
+            paymentMethod,
+            timestamp: new Date().toISOString()
+        };
+        usageRecords.push(record);
         seat.status = 'idle'; seat.reserved = false; seat.reservation = null; 
         seat.accumulatedSeconds = 0; seat.notes = ''; seat.customNoteValue = '';
-        refreshUI();
-        const paymentMsg = paymentMethod ? ` (${paymentMethod})` : '';
-        showToast(`✅ ${seat.name} 已结束${paymentMsg}`);
-        if (gistConfig.gistId) syncData(false);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
+        renderAdminGrid();
+        showToast(`✅ ${seat.name} 结束 ${duration}${paymentMethod ? ' · '+paymentMethod : ''}`);
     }
 
     function actionReset(seatId) {
@@ -925,9 +880,9 @@
         stopRunning(seat); 
         seat.accumulatedSeconds = 0;
         seat.notes = ''; seat.customNoteValue = '';
-        refreshUI(); 
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        renderAdminGrid(); 
         showToast(`🔄 ${seat.name} 已重置`);
-        if (gistConfig.gistId) syncData(false);
     }
 
     function actionToggleMode(seatId) {
@@ -937,8 +892,9 @@
         stopRunning(seat);
         seat.timerMode = seat.timerMode === 'countup' ? 'countdown' : 'countup';
         seat.accumulatedSeconds = 0;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         renderAdminGrid();
-        showToast(`🔁 切换为${seat.timerMode === 'countdown' ? '倒计时' : '正计时'}`);
+        showToast(`🔁 ${seat.timerMode === 'countdown' ? '倒计时' : '正计时'}`);
     }
 
     function getEffectiveNote(seat) {
@@ -956,24 +912,18 @@
             seat.notes = value;
             seat.customNoteValue = '';
         }
-        saveSeats();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         renderAdminGrid();
-        const displayNote = getEffectiveNote(seat);
-        showToast(displayNote ? `🏷️ ${displayNote}` : '🧹 已清空');
-        if (gistConfig.gistId) syncData(false);
     }
 
     function handleCustomNoteSave(seatId, customValue) {
         const idx = getSeatIndex(seatId);
         if (idx === -1) return;
         const seat = seats[idx];
-        const trimmed = customValue.trim();
-        seat.customNoteValue = trimmed;
+        seat.customNoteValue = customValue.trim();
         if (seat.notes === '__custom__' || !seat.notes) seat.notes = '__custom__';
-        saveSeats();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
         renderAdminGrid();
-        showToast(trimmed ? `✅ ${trimmed}` : '🧹 已清空');
-        if (gistConfig.gistId) syncData(false);
     }
 
     function showPaymentModal(seatId) {
@@ -1047,14 +997,14 @@
                     ${seat.reserved && seat.reservation ? 
                         `<div class="reservation-info">
                             <span>预约: ${seat.reservation.name}</span>
-                            <button style="background:none;border:none;cursor:pointer;padding:2px 4px;" data-action="cancelReserve" data-id="${seat.id}">取消</button>
+                            <button style="background:none;border:none;cursor:pointer;" data-action="cancelReserve" data-id="${seat.id}">取消</button>
                         </div>` : ''
                     }
                 </div>
             `;
         });
         $('seatsContainer').innerHTML = html;
-        updateStats(); applyFilter();
+        updateStats();
         $('seatCountDisplay').textContent = seats.length;
     }
 
@@ -1077,88 +1027,50 @@
         });
     }
 
-    function refreshUI() {
-        saveSeats();
-        renderAdminGrid();
-    }
-
     function showRecords(dateStr) {
         const date = dateStr || new Date().toISOString().split('T')[0];
         $('recordDateInput').value = date;
         const list = $('recordsList');
-        const dayRecords = usageRecords.filter(r => r.timestamp.startsWith(date)).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const dayRecords = usageRecords.filter(r => r.timestamp.startsWith(date));
         if (!dayRecords.length) { 
-            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">暂无记录</div>'; 
+            list.innerHTML = '<div style="text-align:center;padding:20px;">暂无记录</div>'; 
             return; 
         }
-        list.innerHTML = dayRecords.map(r => `<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;font-size:0.7rem;">${new Date(r.timestamp).toLocaleTimeString('zh-CN',{hour12:false})}${r.notes?' · '+r.notes:''}</span></div>`).join('');
+        list.innerHTML = dayRecords.map(r => `
+            <div class="record-item">
+                <strong>${r.seatName}</strong> · ${r.duration}<br>
+                <span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()}${r.paymentMethod ? ' · '+r.paymentMethod : ''}</span>
+            </div>
+        `).join('');
     }
 
     function exportToExcel(dateStr) {
         const date = dateStr || new Date().toISOString().split('T')[0];
-        const data = [['座位','操作','时长','备注','时间']];
-        usageRecords.filter(r => r.timestamp.startsWith(date)).forEach(r => data.push([r.seatName, r.action, r.duration, r.notes||'', new Date(r.timestamp).toLocaleString('zh-CN',{hour12:false})]));
+        const data = [['座位','时长','收款方式','时间']];
+        usageRecords.filter(r => r.timestamp.startsWith(date)).forEach(r => data.push([
+            r.seatName, r.duration, r.paymentMethod || '', new Date(r.timestamp).toLocaleString()
+        ]));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '使用记录');
-        XLSX.writeFile(wb, `${shopName.main}_${date}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '记录');
+        XLSX.writeFile(wb, `记录_${date}.xlsx`);
         showToast('✅ 导出成功');
     }
 
     function setupEvents() {
-        $('setupGistBtn').addEventListener('click', () => {
-            $('gistIdInput').value = gistConfig.gistId || '';
-            $('githubTokenInput').value = gistConfig.token || '';
-            $('gistSettingsModal').classList.remove('hidden');
-        });
+        $('testSyncBarBtn').onclick = testConnection;
+        $('pullSyncBarBtn').onclick = pullFromCloud;
+        $('pushSyncBarBtn').onclick = pushToCloud;
         
-        $('closeGistSettingsBtn').addEventListener('click', () => {
-            $('gistSettingsModal').classList.add('hidden');
-        });
-        
-        $('saveGistSettingsBtn').addEventListener('click', () => {
-            const gistId = $('gistIdInput').value.trim();
-            const token = $('githubTokenInput').value.trim();
-            
-            if (!gistId) {
-                showToast('⚠️ 请输入 Gist ID');
-                return;
+        $('saveSyncBarBtn').onclick = () => {
+            const gistId = $('gistIdInputBar').value.trim();
+            if (gistId) {
+                gistConfig.gistId = gistId;
+                saveGistConfig();
+                showToast('✅ 配置已保存');
             }
-            
-            gistConfig = { gistId, token };
-            saveGistConfig();
-            $('gistSettingsModal').classList.add('hidden');
-            showToast('✅ 配置已保存');
-            
-            // 首次同步
-            syncData(true);
-        });
+        };
         
-        $('testSyncBtn').addEventListener('click', async () => {
-            const gistId = $('gistIdInput').value.trim();
-            const token = $('githubTokenInput').value.trim();
-            
-            if (!gistId) {
-                showToast('⚠️ 请输入 Gist ID');
-                return;
-            }
-            
-            const tempConfig = { gistId, token };
-            const oldConfig = gistConfig;
-            gistConfig = tempConfig;
-            
-            const data = await pullFromGist();
-            gistConfig = oldConfig;
-            
-            if (data) {
-                showToast('✅ 连接成功！');
-            } else {
-                showToast('❌ 连接失败，请检查 Gist ID');
-            }
-        });
-        
-        $('syncNowBtn').addEventListener('click', () => syncData(true));
-        
-        $('seatsContainer').addEventListener('click', e => {
+        $('seatsContainer').onclick = e => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
             const action = btn.dataset.action, seatId = parseInt(btn.dataset.id);
@@ -1179,9 +1091,8 @@
                 if (idx!==-1) { 
                     seats[idx].reserved = false; 
                     seats[idx].reservation = null; 
-                    refreshUI(); 
-                    showToast('预约已取消'); 
-                    if (gistConfig.gistId) syncData(false);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                    renderAdminGrid(); 
                 } 
             }
             else if (action === 'toggleMode') actionToggleMode(seatId);
@@ -1194,100 +1105,86 @@
                 const input = document.querySelector(`.custom-note-input[data-id="${seatId}"]`);
                 if (input) handleCustomNoteSave(seatId, input.value);
             }
-        });
+        };
 
-        $('seatsContainer').addEventListener('change', e => {
+        $('seatsContainer').onchange = e => {
             if (e.target.classList.contains('notes-select')) {
                 handleNoteSelect(parseInt(e.target.dataset.id), e.target.value);
             }
-        });
+        };
 
-        $('seatsContainer').addEventListener('keypress', e => {
-            if (e.key === 'Enter' && e.target.classList.contains('custom-note-input')) {
-                handleCustomNoteSave(parseInt(e.target.dataset.id), e.target.value);
-            }
+        document.querySelectorAll('.stat-card').forEach(c => c.onclick = () => {
+            currentFilter = c.dataset.filter;
+            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
+            c.classList.add('active'); 
+            applyFilter();
         });
 
         document.querySelectorAll('.payment-option').forEach(opt => {
-            opt.addEventListener('click', () => {
+            opt.onclick = () => {
                 document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
                 opt.classList.add('selected');
                 selectedPayment = opt.dataset.payment;
                 $('confirmPaymentBtn').disabled = false;
-            });
+            };
         });
 
-        $('confirmPaymentBtn').addEventListener('click', () => {
+        $('confirmPaymentBtn').onclick = () => {
             if (pendingEndSeatId && selectedPayment) {
                 actionEndWithPayment(pendingEndSeatId, selectedPayment);
                 $('paymentModal').classList.add('hidden');
             }
-        });
+        };
 
-        $('skipPaymentBtn').addEventListener('click', () => {
+        $('skipPaymentBtn').onclick = () => {
             if (pendingEndSeatId) {
                 actionEndWithPayment(pendingEndSeatId, null);
                 $('paymentModal').classList.add('hidden');
             }
-        });
+        };
 
-        document.querySelectorAll('.stat-card').forEach(c => c.addEventListener('click', () => {
-            currentFilter = c.dataset.filter;
-            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
-            c.classList.add('active'); applyFilter();
-        }));
-
-        $('addSeatBtn').addEventListener('click', () => { 
-            const newId = seats.length > 0 ? Math.max(...seats.map(s=>s.id)) + 1 : 1;
+        $('addSeatBtn').onclick = () => { 
+            const newId = Math.max(...seats.map(s=>s.id)) + 1;
             seats.push(createDefaultSeat(newId)); 
-            saveSeats(); 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
             renderAdminGrid(); 
-            showToast(`✅ 已添加`); 
-            if (gistConfig.gistId) syncData(false);
-        });
+        };
         
-        $('removeSeatBtn').addEventListener('click', () => { 
+        $('removeSeatBtn').onclick = () => { 
             if(seats.length>1) { 
                 seats.pop(); 
-                saveSeats(); 
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
                 renderAdminGrid(); 
-                showToast('✅ 已移除'); 
-                if (gistConfig.gistId) syncData(false);
-            } else showToast('⚠️ 至少保留一个'); 
-        });
+            }
+        };
         
-        $('resetAllIdleBtn').addEventListener('click', () => { 
+        $('resetAllIdleBtn').onclick = () => { 
             seats.forEach(s => { 
                 stopRunning(s); 
                 s.status='idle'; 
                 s.reserved=false; 
-                s.reservation=null; 
                 s.accumulatedSeconds=0;
-                s.notes = ''; s.customNoteValue = '';
             }); 
-            saveSeats(); 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
             renderAdminGrid(); 
-            showToast('✅ 全部空闲'); 
-            if (gistConfig.gistId) syncData(false);
-        });
+        };
         
-        $('viewRecordsBtn').addEventListener('click', () => { 
+        $('viewRecordsBtn').onclick = () => { 
             showRecords(new Date().toISOString().split('T')[0]); 
             $('recordsModal').classList.remove('hidden'); 
-        });
+        };
         
-        $('closeRecordsBtn').addEventListener('click', () => $('recordsModal').classList.add('hidden'));
-        $('loadRecordsBtn').addEventListener('click', () => { 
+        $('closeRecordsBtn').onclick = () => $('recordsModal').classList.add('hidden');
+        $('loadRecordsBtn').onclick = () => { 
             if($('recordDateInput').value) showRecords($('recordDateInput').value); 
-        });
-        $('exportRecordsBtn').addEventListener('click', () => exportToExcel(new Date().toISOString().split('T')[0]));
-        $('exportDayRecordsBtn').addEventListener('click', () => { 
+        };
+        $('exportRecordsBtn').onclick = () => exportToExcel(new Date().toISOString().split('T')[0]);
+        $('exportDayRecordsBtn').onclick = () => { 
             exportToExcel($('recordDateInput').value); 
-            $('recordsModal').classList.add('hidden'); 
-        });
+        };
         
-        $('cancelCustomBtn').addEventListener('click', () => $('customTimeModal').classList.add('hidden'));
-        $('confirmCustomBtn').addEventListener('click', () => {
+        $('cancelCustomBtn').onclick = () => $('customTimeModal').classList.add('hidden');
+        $('confirmCustomBtn').onclick = () => {
             const m = parseFloat($('customMinutesInput').value);
             if (m>0 && pendingCustomSeatId) { 
                 const idx = getSeatIndex(pendingCustomSeatId); 
@@ -1296,57 +1193,47 @@
                     seats[idx].countdownInitial = Math.floor(m*60); 
                     seats[idx].timerMode='countdown'; 
                     seats[idx].accumulatedSeconds=0; 
-                    refreshUI(); 
-                    showToast(`✅ ${m}分钟`); 
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                    renderAdminGrid(); 
                 } 
             }
             $('customTimeModal').classList.add('hidden');
-        });
+        };
         
-        $('cancelReserveBtn').addEventListener('click', () => $('reservationModal').classList.add('hidden'));
-        $('confirmReserveBtn').addEventListener('click', () => {
+        $('cancelReserveBtn').onclick = () => $('reservationModal').classList.add('hidden');
+        $('confirmReserveBtn').onclick = () => {
             const name = $('reserveNameInput').value.trim();
             if (!name) { showToast('⚠️ 请填写姓名'); return; }
             if (pendingReserveSeatId) { 
                 const idx = getSeatIndex(pendingReserveSeatId); 
                 if(idx!==-1){ 
-                    stopRunning(seats[idx]); 
                     seats[idx].reserved=true; 
                     seats[idx].status='idle'; 
                     seats[idx].reservation={name, contact: $('reserveContactInput').value.trim()}; 
-                    addRecord(seats[idx].name,'预约','-',name); 
-                    refreshUI(); 
-                    showToast(`✅ 已预约`); 
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                    renderAdminGrid(); 
                 } 
             }
             $('reservationModal').classList.add('hidden');
-        });
+        };
         
-        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { 
+        document.querySelectorAll('.modal-overlay').forEach(m => m.onclick = e => { 
             if(e.target===m) m.classList.add('hidden'); 
-        }));
+        });
     }
 
     // 初始化
     loadGistConfig();
-    loadShopName();
     loadSeats(); 
     loadRecords(); 
     renderAdminGrid(); 
     setupEvents();
     updateSyncUI();
     
-    // 如果配置了云端，自动同步一次
+    // 自动拉取一次
     if (gistConfig.gistId) {
-        setTimeout(() => syncData(false), 1000);
+        setTimeout(() => pullFromCloud(), 500);
     }
-    
-    // 定时同步（每30秒）
-    syncTimer = setInterval(() => {
-        if (gistConfig.gistId) {
-            syncData(false);
-        }
-    }, 30000);
     
     globalTimer = setInterval(() => {
         seats.forEach(s => { 
@@ -1356,7 +1243,8 @@
                 s.running=false; 
                 s.accumulatedSeconds=s.countdownInitial; 
                 s.status='paused'; 
-                refreshUI(); 
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                renderAdminGrid(); 
             } 
         });
         updateStats();
