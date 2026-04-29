@@ -44,8 +44,15 @@
         .reservation-info div { margin-bottom: 4px; color: #666; }
         .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; background: #f0f0f0; color: #333; }
         .timer-layout { display: flex; flex-direction: column; gap: 15px; }
-        .top-bar { background: #fafafa; padding: 8px 12px; border-radius: 6px; display: flex; gap: 8px; align-items: center; border: 1px solid #e0e0e0; }
+        .top-bar { background: #fafafa; padding: 8px 12px; border-radius: 6px; display: flex; gap: 8px; align-items: center; border: 1px solid #e0e0e0; flex-wrap: wrap; }
         .top-bar input { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 12px; width: 140px; }
+        .top-bar input:focus { outline: none; border-color: #333; }
+        .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 5px 12px; border: 1px solid #ddd; border-radius: 15px; font-size: 12px; cursor: pointer; transition: all 0.3s; background: white; color: #666; }
+        .filter-btn:hover { border-color: #333; color: #333; }
+        .filter-btn.active { background: #333; color: white; border-color: #333; }
+        .filter-count { font-size: 11px; color: #999; margin-left: 2px; }
+        .filter-btn.active .filter-count { color: #ddd; }
         .position-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; padding: 10px; max-height: 650px; overflow-y: auto; }
         .position-card { background: white; border-radius: 8px; padding: 10px; border: 1px solid #e0e0e0; position: relative; }
         .position-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #f0f0f0; }
@@ -69,7 +76,7 @@
         .custom-confirm-overlay { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
         .custom-confirm-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); padding: 30px; min-width: 360px; max-width: 90vw; text-align: center; }
         .custom-confirm-icon { font-size: 48px; margin-bottom: 16px; }
-        .custom-confirm-message { font-size: 15px; color: #333; margin-bottom: 24px; line-height: 1.6; }
+        .custom-confirm-message { font-size: 15px; color: #333; margin-bottom: 24px; line-height: 1.6; white-space: pre-line; }
         .custom-confirm-buttons { display: flex; gap: 12px; justify-content: center; }
         .custom-confirm-buttons .btn { min-width: 100px; }
         .payment-options { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin: 20px 0; }
@@ -107,7 +114,18 @@
         </div>
         <div id="timerTab" class="tab-content">
             <div class="timer-layout">
-                <div class="top-bar"><input type="text" id="newPositionName" placeholder="输入新位置名称"><button class="btn btn-info btn-xs" onclick="addNewPosition()">添加座位</button><button class="btn btn-xs" onclick="exportAllExcel()" style="margin-left:auto;">导出Excel</button></div>
+                <div class="top-bar">
+                    <input type="text" id="newPositionName" placeholder="输入新位置名称">
+                    <button class="btn btn-info btn-xs" onclick="addNewPosition()">添加座位</button>
+                    <span style="color:#ddd;margin:0 5px;">|</span>
+                    <div class="filter-bar" id="filterBar">
+                        <button class="filter-btn active" data-filter="all">全部<span class="filter-count" id="countAll"></span></button>
+                        <button class="filter-btn" data-filter="空闲">空闲<span class="filter-count" id="countFree"></span></button>
+                        <button class="filter-btn" data-filter="使用中">使用中<span class="filter-count" id="countBusy"></span></button>
+                        <button class="filter-btn" data-filter="已预约">预约中<span class="filter-count" id="countReserved"></span></button>
+                    </div>
+                    <button class="btn btn-xs" onclick="exportAllExcel()" style="margin-left:auto;">导出Excel</button>
+                </div>
                 <div class="position-grid" id="positionGrid"></div>
             </div>
         </div>
@@ -118,10 +136,7 @@
             <div class="custom-confirm-icon">💳</div>
             <div class="custom-confirm-message" id="paymentConfirmMsg"></div>
             <div class="payment-options" id="paymentConfirmOptions"></div>
-            <div class="custom-confirm-buttons">
-                <button class="btn btn-primary" id="paymentConfirmBtn">确认结束</button>
-                <button class="btn" onclick="closePaymentConfirm()">取消</button>
-            </div>
+            <div class="custom-confirm-buttons"><button class="btn btn-primary" id="paymentConfirmBtn">确认结束</button><button class="btn" onclick="closePaymentConfirm()">取消</button></div>
         </div>
     </div>
 
@@ -129,10 +144,7 @@
         <div class="custom-confirm-box">
             <div class="custom-confirm-icon">⚠️</div>
             <div class="custom-confirm-message" id="deleteConfirmMsg"></div>
-            <div class="custom-confirm-buttons">
-                <button class="btn btn-danger" id="deleteConfirmOkBtn">确认删除</button>
-                <button class="btn" onclick="closeDeleteConfirm()">取消</button>
-            </div>
+            <div class="custom-confirm-buttons"><button class="btn btn-danger" id="deleteConfirmOkBtn">确认删除</button><button class="btn" onclick="closeDeleteConfirm()">取消</button></div>
         </div>
     </div>
 
@@ -144,8 +156,9 @@
         let timerIntervals = {};
         let selectedPayment = null;
         let endingPosition = null;
-        let pendingDeleteId = null;
         let deleteCallback = null;
+        let currentFilter = 'all';
+        const STORAGE_KEY = 'yujizaowu_data';
 
         function getTodayStr() { return new Date().toISOString().split('T')[0]; }
         function getReservationDate(r) { return r.time.split('T')[0]; }
@@ -156,20 +169,21 @@
             return false;
         }
 
+        function getFilterStatus(posName) {
+            if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') return '使用中';
+            if (positions[posName].status === '已预约') return '已预约';
+            return '空闲';
+        }
+
         function showDeleteConfirm(message, callback) {
             document.getElementById('deleteConfirmMsg').textContent = message;
             document.getElementById('deleteConfirmOverlay').style.display = 'block';
             deleteCallback = callback;
         }
-        function closeDeleteConfirm() {
-            document.getElementById('deleteConfirmOverlay').style.display = 'none';
-            deleteCallback = null;
-        }
-        document.getElementById('deleteConfirmOkBtn').addEventListener('click', function() {
-            if (deleteCallback) { deleteCallback();
-                deleteCallback = null; }
-            document.getElementById('deleteConfirmOverlay').style.display = 'none';
-        });
+        function closeDeleteConfirm() { document.getElementById('deleteConfirmOverlay').style.display = 'none';
+            deleteCallback = null; }
+        document.getElementById('deleteConfirmOkBtn').addEventListener('click', function() { if (deleteCallback) { deleteCallback();
+                deleteCallback = null; } document.getElementById('deleteConfirmOverlay').style.display = 'none'; });
 
         function showPaymentConfirm(posName) {
             endingPosition = posName;
@@ -183,26 +197,16 @@
                 <div class="payment-option" data-method="微信"><span class="payment-icon">💚</span><span class="payment-name">微信</span></div>
                 <div class="payment-option" data-method="支付宝"><span class="payment-icon">💙</span><span class="payment-name">支付宝</span></div>
             `;
-            opts.querySelectorAll('.payment-option').forEach(opt => {
-                opt.addEventListener('click', function() {
-                    opts.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+            opts.querySelectorAll('.payment-option').forEach(opt => { opt.addEventListener('click', function() { opts.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
-                    selectedPayment = this.dataset.method;
-                });
-            });
+                    selectedPayment = this.dataset.method; }); });
             document.getElementById('paymentConfirmOverlay').style.display = 'block';
         }
-        function closePaymentConfirm() {
-            document.getElementById('paymentConfirmOverlay').style.display = 'none';
+        function closePaymentConfirm() { document.getElementById('paymentConfirmOverlay').style.display = 'none';
             endingPosition = null;
-            selectedPayment = null;
-        }
-        document.getElementById('paymentConfirmBtn').addEventListener('click', function() {
-            if (!selectedPayment) { alert('请选择支付方式！'); return; }
-            const p = endingPosition;
-            if (timerIntervals[p]) { clearInterval(timerIntervals[p]);
-                delete timerIntervals[p]; }
-            const elapsed = activeTimers[p].elapsed;
+            selectedPayment = null; }
+        document.getElementById('paymentConfirmBtn').addEventListener('click', function() { if (!selectedPayment) { alert('请选择支付方式！'); return; } const p = endingPosition; if (timerIntervals[p]) { clearInterval(timerIntervals[p]);
+                delete timerIntervals[p]; } const elapsed = activeTimers[p].elapsed;
             saveCompletionRecord({ position: p, time: new Date().toISOString(), duration: formatTime(Math.abs(elapsed)), remark: activeTimers[p].remark, payment: selectedPayment, mode: activeTimers[p].mode });
             positions[p].status = '空闲';
             positions[p].reservation = null;
@@ -211,214 +215,241 @@
             closePaymentConfirm();
             updatePositionStatuses();
             renderPositionGrid();
-            saveData();
-            alert(`${p}计时结束！\n计时: ${formatTime(Math.abs(elapsed))}\n支付: ${selectedPayment}`);
-        });
+            saveAllData();
+            alert(`${p}计时结束！\n计时: ${formatTime(Math.abs(elapsed))}\n支付: ${selectedPayment}`); });
 
         function init() {
-            for (let i = 1; i <= 36; i++) { if (!positions[`座位${i}`]) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时' }; }
+            loadAllData();
+            if (Object.keys(positions).length === 0) { for (let i = 1; i <= 36; i++) { positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时' }; } }
             document.getElementById('resDateTime').value = new Date().toISOString().slice(0, 16);
-            loadData();
             updatePositionStatuses();
             updatePositionSelects();
             renderPositionGrid();
             refreshReservationList();
+            updateFilterCounts();
             setInterval(updateAllTimers, 1000);
-            window.addEventListener('beforeunload', saveData);
+            window.addEventListener('beforeunload', function() { saveAllData(); });
+            setInterval(function() { saveAllData(); }, 5000);
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    renderPositionGrid();
+                });
+            });
         }
         function updatePositionStatuses() {
             const today = getTodayStr();
-            for (const posName in positions) {
-                if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') continue;
-                let found = false, foundRes = null;
-                for (const res of reservations) { if (res.position === posName && getReservationDate(res) === today) { found = true;
-                        foundRes = res; break; } }
-                if (found) { positions[posName].status = '已预约';
+            for (const posName in positions) { if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') continue;
+                let found = false,
+                    foundRes = null; for (const res of reservations) { if (res.position === posName && getReservationDate(res) === today) { found = true;
+                        foundRes = res; break; } } if (found) { positions[posName].status = '已预约';
                     positions[posName].reservation = foundRes; } else { positions[posName].status = '空闲';
-                    positions[posName].reservation = null; }
-            }
+                    positions[posName].reservation = null; } }
         }
-        function switchTab(t) {
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            if (t === 'reservation') { document.querySelectorAll('.tab-button')[0].classList.add('active');
+        function switchTab(t) { document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); if (t === 'reservation') { document.querySelectorAll('.tab-button')[0].classList.add('active');
                 document.getElementById('reservationTab').classList.add('active');
                 refreshReservationList(); } else { document.querySelectorAll('.tab-button')[1].classList.add('active');
                 document.getElementById('timerTab').classList.add('active');
                 updatePositionSelects();
-                renderPositionGrid(); }
-        }
-        function addNewPosition() {
-            const n = document.getElementById('newPositionName').value.trim();
-            if (!n) { alert('请输入位置名称！'); return; }
-            if (positions[n]) { alert('已存在！'); return; }
+                renderPositionGrid();
+                updateFilterCounts(); } }
+        function addNewPosition() { const n = document.getElementById('newPositionName').value.trim(); if (!n) { alert('请输入位置名称！'); return; } if (positions[n]) { alert('已存在！'); return; }
             positions[n] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时' };
             document.getElementById('newPositionName').value = '';
             updatePositionSelects();
             renderPositionGrid();
-            saveSettings();
-        }
-        function deletePosition(posName) {
-            if (activeTimers[posName]) { alert('使用中，无法删除！'); return; }
-            if (isPositionOccupiedToday(posName)) { alert('今天已被占用或预约！'); return; }
-            for (const res of reservations) { if (res.position === posName && getReservationDate(res) >= getTodayStr()) { alert('有未来预约，请先删除对应预约！'); return; } }
-            showDeleteConfirm(`确定要删除座位"${posName}"吗？`, function() {
-                delete positions[posName];
+            updateFilterCounts();
+            saveAllData(); }
+        function deletePosition(posName) { if (activeTimers[posName]) { alert('使用中，无法删除！'); return; } if (isPositionOccupiedToday(posName)) { alert('今天已被占用或预约！'); return; } for (const res of reservations) { if (res.position === posName && getReservationDate(res) >= getTodayStr()) { alert('有未来预约，请先删除对应预约！'); return; } }
+            showDeleteConfirm(`确定要删除座位"${posName}"吗？`, function() { delete positions[posName];
                 updatePositionSelects();
                 renderPositionGrid();
-                saveSettings();
-            });
-        }
-        function updatePositionSelects() {
-            const s = document.getElementById('resPosition');
-            const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')), nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
+                updateFilterCounts();
+                saveAllData(); }); }
+        function updatePositionSelects() { const s = document.getElementById('resPosition'); const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')),
+                nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
             s.innerHTML = '<option value="不指定">不指定位置</option>';
             names.forEach(n => { const o = document.createElement('option');
                 o.value = n;
                 o.textContent = n;
-                s.appendChild(o); });
-        }
-        function addReservation() {
-            const name = document.getElementById('resName').value.trim() || '未填写';
-            const phone = document.getElementById('resPhone').value.trim();
-            const dt = document.getElementById('resDateTime').value;
-            const pos = document.getElementById('resPosition').value;
-            const remark = document.getElementById('resRemark').value;
-            if (!phone) { alert('电话不能为空！'); return; }
-            if (!dt) { alert('请选择时间！'); return; }
-            const resDate = dt.split('T')[0];
-            if (pos !== '不指定') {
-                if (!positions[pos]) { alert('位置不存在！'); return; }
-                for (const r of reservations) { if (r.position === pos && getReservationDate(r) === resDate) { alert(`${pos}在${resDate}已被预约！`); return; } }
-                if (resDate === getTodayStr() && isPositionOccupiedToday(pos)) { alert(`${pos}今天已被占用！`); return; }
-            }
+                s.appendChild(o); }); }
+        function addReservation() { const name = document.getElementById('resName').value.trim() || '未填写'; const phone = document.getElementById('resPhone').value.trim(); const dt = document.getElementById('resDateTime').value;
+            const pos = document.getElementById('resPosition').value; const remark = document.getElementById('resRemark').value; if (!phone) { alert('电话不能为空！'); return; } if (!dt) { alert('请选择时间！'); return; } const resDate = dt.split('T')[0]; if (pos !== '不指定') { if (!positions[pos]) { alert('位置不存在！'); return; } for (const r of reservations) { if (r.position === pos && getReservationDate(r) === resDate) { alert(`${pos}在${resDate}已被预约！`); return; } } if (resDate === getTodayStr() && isPositionOccupiedToday(pos)) { alert(`${pos}今天已被占用！`); return; } }
             reservations.push({ id: Date.now(), name, phone, time: dt, position: pos, remark, status: '已预约' });
             updatePositionStatuses();
             refreshReservationList();
             updatePositionSelects();
             renderPositionGrid();
-            saveData();
+            updateFilterCounts();
+            saveAllData();
             alert('预约添加成功！');
-            clearForm();
-        }
+            clearForm(); }
         function clearForm() { document.getElementById('resName').value = '';
             document.getElementById('resPhone').value = '';
             document.getElementById('resPosition').value = '不指定';
             document.getElementById('resRemark').value = '美团';
             document.getElementById('resDateTime').value = new Date().toISOString().slice(0, 16); }
-        function deleteReservation(id) {
-            const r = reservations.find(x => x.id === id);
-            const msg = r ? `确定要删除此预约吗？\n\n👤 ${r.name}\n📞 ${r.phone}\n📅 ${r.time}\n📍 ${r.position}` : '确定删除吗？';
-            showDeleteConfirm(msg, function() {
-                reservations = reservations.filter(x => x.id !== id);
+        function deleteReservation(id) { const r = reservations.find(x => x.id === id); const msg = r ? `确定要删除此预约吗？\n\n👤 ${r.name}\n📞 ${r.phone}\n📅 ${r.time}\n📍 ${r.position}` : '确定删除吗？';
+            showDeleteConfirm(msg, function() { reservations = reservations.filter(x => x.id !== id);
                 updatePositionStatuses();
                 refreshReservationList();
                 renderPositionGrid();
-                saveData();
-            });
-        }
-        function refreshReservationList() {
-            const c = document.getElementById('reservationListContent');
-            if (reservations.length === 0) { c.innerHTML = '<div style="text-align:center;color:#999;padding:50px;">暂无预约记录</div>'; return; }
-            const g = {};
+                updateFilterCounts();
+                saveAllData(); }); }
+        function refreshReservationList() { const c = document.getElementById('reservationListContent'); if (reservations.length === 0) { c.innerHTML = '<div style="text-align:center;color:#999;padding:50px;">暂无预约记录</div>'; return; } const g = {};
             reservations.sort((a, b) => new Date(a.time) - new Date(b.time));
             reservations.forEach(r => { const d = getReservationDate(r); if (!g[d]) g[d] = [];
-                g[d].push(r); });
-            let h = '';
-            for (const d in g) {
-                h += `<div class="reservation-date-group"><div class="date-header">📅 ${d} (${g[d].length}个预约)</div>`;
+                g[d].push(r); }); let h = ''; for (const d in g) { h += `<div class="reservation-date-group"><div class="date-header">📅 ${d} (${g[d].length}个预约)</div>`;
                 g[d].forEach(r => { const t = r.time.split('T')[1] || '';
                     h += `<div class="reservation-item"><div class="reservation-info"><div>⏰ <strong>${t}</strong></div><div>👤 <strong>${r.name}</strong> | 📞 ${r.phone}</div><div>📍 ${r.position} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteReservation(${r.id})">删除</button></div>`; });
-                h += '</div>';
-            }
-            c.innerHTML = h;
-        }
-        function openTable(posName) {
-            if (isPositionOccupiedToday(posName)) { alert('已被占用！'); return; }
-            const ri = document.getElementById(`remark_${posName}`);
-            const ci = document.getElementById(`countdown_${posName}`);
-            const ms = document.getElementById(`mode_${posName}`);
+                h += '</div>'; }
+            c.innerHTML = h; }
+        function openTable(posName) { if (isPositionOccupiedToday(posName)) { alert('已被占用！'); return; } const ri = document.getElementById(`remark_${posName}`); const ci = document.getElementById(`countdown_${posName}`); const ms = document.getElementById(`mode_${posName}`);
             positions[posName].remark = ri ? ri.value.trim() : '';
             positions[posName].countdownMinutes = ci && !ci.disabled ? parseInt(ci.value) : 60;
             positions[posName].timerMode = ms ? ms.value : '正计时';
             positions[posName].status = '已开台';
             activeTimers[posName] = { remark: positions[posName].remark, elapsed: 0, mode: positions[posName].timerMode, countdownSeconds: positions[posName].countdownMinutes * 60, running: false, paused: false };
             renderPositionGrid();
-            saveData();
-        }
-        function startTimer(posName) {
-            if (!activeTimers[posName]) { alert('请先开台！'); return; }
-            if (activeTimers[posName].running) { alert('已在计时中！'); return; }
+            updateFilterCounts();
+            saveAllData(); }
+        function startTimer(posName) { if (!activeTimers[posName]) { alert('请先开台！'); return; } if (activeTimers[posName].running) { alert('已在计时中！'); return; }
             positions[posName].status = '计时中';
             activeTimers[posName].running = true;
             activeTimers[posName].paused = false;
             activeTimers[posName].elapsed = activeTimers[posName].mode === '倒计时' ? activeTimers[posName].countdownSeconds : 0;
             startTimerInterval(posName);
             renderPositionGrid();
-            saveData();
-        }
-        function startTimerInterval(posName) {
-            if (timerIntervals[posName]) clearInterval(timerIntervals[posName]);
-            timerIntervals[posName] = setInterval(() => {
-                if (!activeTimers[posName] || !activeTimers[posName].running || activeTimers[posName].paused) return;
-                if (activeTimers[posName].mode === '正计时') activeTimers[posName].elapsed++;
-                else { activeTimers[posName].elapsed--; if (activeTimers[posName].elapsed <= 0) { activeTimers[posName].elapsed = 0;
+            updateFilterCounts();
+            saveAllData(); }
+        function startTimerInterval(posName) { if (timerIntervals[posName]) clearInterval(timerIntervals[posName]);
+            timerIntervals[posName] = setInterval(() => { if (!activeTimers[posName] || !activeTimers[posName].running || activeTimers[posName].paused) return; if (activeTimers[posName].mode === '正计时') activeTimers[posName].elapsed++; else { activeTimers[posName].elapsed--; if (activeTimers[posName].elapsed <= 0) { activeTimers[posName].elapsed = 0;
                         activeTimers[posName].running = false;
                         clearInterval(timerIntervals[posName]);
                         alert(`${posName}倒计时结束！`); } }
-                updateSingleTimerDisplay(posName);
-            }, 1000);
-        }
+                updateSingleTimerDisplay(posName); }, 1000); }
         function pauseTimer(posName) { if (!activeTimers[posName]) { alert('未开台！'); return; }
             activeTimers[posName].paused = !activeTimers[posName].paused;
             positions[posName].status = activeTimers[posName].paused ? '已暂停' : '计时中';
             renderPositionGrid();
-            saveData(); }
+            updateFilterCounts();
+            saveAllData(); }
         function endTimer(posName) { if (!activeTimers[posName]) { alert('未开台！'); return; }
-            showPaymentConfirm(posName); }
+        showPaymentConfirm(posName); }
         function updateSingleTimerDisplay(posName) { const d = document.getElementById(`timer_${posName}`); if (d && activeTimers[posName]) d.textContent = formatTime(Math.abs(activeTimers[posName].elapsed)); }
         function updateAllTimers() { for (const k in activeTimers) updateSingleTimerDisplay(k); }
-        function saveCompletionRecord(r) { let a = [];
-            const s = localStorage.getItem('completionRecords'); if (s) a = JSON.parse(s);
+        function saveCompletionRecord(r) { let a = []; const s = localStorage.getItem('yujizaowu_completion'); if (s) a = JSON.parse(s);
             a.push(r);
-            localStorage.setItem('completionRecords', JSON.stringify(a)); }
-        function formatTime(s) { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
-        function updateModeInputs(posName) { const ms = document.getElementById(`mode_${posName}`), ci = document.getElementById(`countdown_${posName}`); if (ms && ci) { if (ms.value === '倒计时') { ci.disabled = false;
+            localStorage.setItem('yujizaowu_completion', JSON.stringify(a)); }
+        function formatTime(s) { const h = Math.floor(s / 3600),
+                m = Math.floor((s % 3600) / 60),
+                sec = Math.floor(s % 60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+        function updateModeInputs(posName) { const ms = document.getElementById(`mode_${posName}`),
+                ci = document.getElementById(`countdown_${posName}`); if (ms && ci) { if (ms.value === '倒计时') { ci.disabled = false;
                     ci.style.background = 'white';
                     ci.style.color = '#333'; } else { ci.disabled = true;
                     ci.style.background = '#f5f5f5';
                     ci.style.color = '#ccc'; } } }
+        function updateFilterCounts() {
+            let free = 0,
+                busy = 0,
+                reserved = 0;
+            for (const posName in positions) {
+                const fs = getFilterStatus(posName);
+                if (fs === '空闲') free++;
+                else if (fs === '使用中') busy++;
+                else if (fs === '已预约') reserved++;
+            }
+            const total = free + busy + reserved;
+            document.getElementById('countAll').textContent = `(${total})`;
+            document.getElementById('countFree').textContent = `(${free})`;
+            document.getElementById('countBusy').textContent = `(${busy})`;
+            document.getElementById('countReserved').textContent = `(${reserved})`;
+        }
         function renderPositionGrid() {
             const g = document.getElementById('positionGrid');
             let h = '';
-            const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')), nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
+            const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')),
+                    nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
             names.forEach(posName => {
-                const d = positions[posName], s = d.status;
-                const ga = s === '空闲' ? 'active' : '', ya = s === '已开台' ? 'active' : '', ra = s === '计时中' ? 'active' : '', ba = s === '已暂停' ? 'active' : '';
-                const st = { '空闲':'空闲','已开台':'已开台','计时中':'计时中','已暂停':'已暂停','已预约':'已预约' }[s] || '空闲';
+                const fs = getFilterStatus(posName);
+                if (currentFilter === '空闲' && fs !== '空闲') return;
+                if (currentFilter === '使用中' && fs !== '使用中') return;
+                if (currentFilter === '已预约' && fs !== '已预约') return;
+                const d = positions[posName],
+                    s = d.status;
+                const ga = s === '空闲' ? 'active' : '',
+                    ya = s === '已开台' ? 'active' : '',
+                    ra = s === '计时中' ? 'active' : '',
+                    ba = s === '已暂停' ? 'active' : '';
+                const st = { '空闲': '空闲', '已开台': '已开台', '计时中': '计时中', '已暂停': '已暂停', '已预约': '已预约' } [s] || '空闲';
                 const tv = activeTimers[posName] ? formatTime(Math.abs(activeTimers[posName].elapsed)) : '00:00:00';
                 const rv = activeTimers[posName] ? activeTimers[posName].remark : (d.remark || '');
-                const cv = d.countdownMinutes || 60, mv = d.timerMode || '正计时', cd = mv === '正计时' ? 'disabled' : '';
+                const cv = d.countdownMinutes || 60,
+                    mv = d.timerMode || '正计时',
+                    cd = mv === '正计时' ? 'disabled' : '';
                 h += `<div class="position-card"><button class="delete-position-btn" onclick="event.stopPropagation();deletePosition('${posName}')">×</button><div class="position-header"><span class="position-name">${posName}</span><div class="status-lights"><div class="status-light light-green ${ga}"></div><div class="status-light light-yellow ${ya}"></div><div class="status-light light-red ${ra}"></div><div class="status-light light-blue ${ba}"></div></div></div><div style="font-size:10px;color:#999;margin-bottom:4px;">${st}</div><div class="position-timer-display" id="timer_${posName}">${tv}</div><div class="position-info-item"><label>备注</label><input class="position-remark-input" id="remark_${posName}" value="${rv.replace(/"/g,'&quot;')}"></div><div class="position-info-item"><label>计时模式</label><select class="position-mode-select" id="mode_${posName}" onchange="updateModeInputs('${posName}')"><option value="正计时" ${mv==='正计时'?'selected':''}>正计时</option><option value="倒计时" ${mv==='倒计时'?'selected':''}>倒计时</option></select></div><div class="position-info-item"><label>倒计时(分钟)</label><input type="number" class="position-countdown-input" id="countdown_${posName}" value="${cv}" min="1" ${cd}></div><div class="position-controls"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openTable('${posName}')">开台</button><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startTimer('${posName}')">开始</button><button class="btn btn-warning btn-sm" onclick="event.stopPropagation();pauseTimer('${posName}')">暂停</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();endTimer('${posName}')">结束</button></div></div>`;
             });
+            if (h === '') h = '<div style="text-align:center;color:#999;padding:40px;grid-column:1/-1;">当前分类没有座位</div>';
             g.innerHTML = h;
         }
         function exportReservationsExcel() { if (!reservations.length) { alert('无数据！'); return; } const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['预约时间','姓名','电话','位置','备注','状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])]), '预约记录');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                ['预约时间', '姓名', '电话', '位置', '备注', '状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])
+            ]), '预约记录');
             XLSX.writeFile(wb, `与己造物_预约_${getTodayStr()}.xlsx`); }
-        function exportAllExcel() { const wb = XLSX.utils.book_new(); if (reservations.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['预约时间','姓名','电话','位置','备注','状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])]), '预约记录'); const s = localStorage.getItem('completionRecords'); if (s) { const a = JSON.parse(s); if (a.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['结束时间','位置','计时时长','备注','支付方式'], ...a.map(r => [new Date(r.time).toLocaleString(), r.position, r.duration, r.remark, r.payment])]), '完成记录'); } if (!wb.SheetNames.length) { alert('无数据！'); return; }
+        function exportAllExcel() { const wb = XLSX.utils.book_new(); if (reservations.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                    ['预约时间', '姓名', '电话', '位置', '备注', '状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])
+                ]), '预约记录'); const s = localStorage.getItem('yujizaowu_completion'); if (s) { const a = JSON.parse(s); if (a.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                        ['结束时间', '位置', '计时时长', '备注', '支付方式'], ...a.map(r => [new Date(r.time).toLocaleString(), r.position, r.duration, r.remark, r.payment])
+                    ]), '完成记录'); } if (!wb.SheetNames.length) { alert('无数据！'); return; }
             XLSX.writeFile(wb, `与己造物_全部_${getTodayStr()}.xlsx`); }
-        function saveSettings() { const s = {}; for (const k in positions) s[k] = { remark: positions[k].remark, countdownMinutes: positions[k].countdownMinutes, timerMode: positions[k].timerMode };
-            localStorage.setItem('positionSettings', JSON.stringify(s)); }
-        function saveData() { localStorage.setItem('systemData', JSON.stringify({ reservations, positions, activeTimers }));
-            saveSettings(); }
-        function loadData() { const s = localStorage.getItem('systemData'); if (s) { try { const d = JSON.parse(s);
-                    reservations = d.reservations || []; if (d.positions) for (const k in d.positions) if (positions[k]) { positions[k].status = d.positions[k].status || '空闲';
-                        positions[k].reservation = d.positions[k].reservation || null;
-                        positions[k].remark = d.positions[k].remark || '';
-                        positions[k].countdownMinutes = d.positions[k].countdownMinutes || 60;
-                        positions[k].timerMode = d.positions[k].timerMode || '正计时'; }
-                    updatePositionStatuses(); } catch(e) {} } }
+
+        function saveAllData() {
+            const data = { reservations, positions, activeTimers };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadAllData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    reservations = data.reservations || [];
+                    if (data.positions) {
+                        positions = {};
+                        for (const k in data.positions) {
+                            positions[k] = {
+                                status: data.positions[k].status || '空闲',
+                                reservation: data.positions[k].reservation || null,
+                                remark: data.positions[k].remark || '',
+                                countdownMinutes: data.positions[k].countdownMinutes || 60,
+                                timerMode: data.positions[k].timerMode || '正计时'
+                            };
+                        }
+                    }
+                    if (data.activeTimers) {
+                        activeTimers = {};
+                        for (const k in data.activeTimers) {
+                            if (data.activeTimers[k].running) {
+                                activeTimers[k] = { ...data.activeTimers[k], running: false, paused: false, elapsed: data.activeTimers[k].elapsed || 0 };
+                            } else {
+                                activeTimers[k] = data.activeTimers[k];
+                            }
+                        }
+                    }
+                    updatePositionStatuses();
+                } catch (e) {
+                    console.error('数据加载失败:', e);
+                    for (let i = 1; i <= 36; i++) { positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时' }; }
+                }
+            }
+        }
+
         window.onload = init;
     </script>
 </body>
