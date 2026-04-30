@@ -133,10 +133,9 @@
                         <label>备注</label>
                         <select id="resRemark" onchange="toggleCustomRemark()">
                             <option value="美团">美团</option>
-                            <option value="抖音">抖音</option>
                             <option value="快手">快手</option>
+                            <option value="抖音">抖音</option>
                             <option value="小红书">小红书</option>
-                            <option value="线下">线下</option>
                             <option value="自定义">自定义</option>
                         </select>
                         <input type="text" id="resCustomRemark" class="custom-remark-input" placeholder="请输入自定义备注内容">
@@ -227,6 +226,34 @@
             return 'badge-custom';
         }
 
+        function getFilterStatus(posName) {
+            if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') return '使用中';
+            if (positions[posName].status === '已预约') return '已预约';
+            return '空闲';
+        }
+        function isTimerLocked(posName) { return positions[posName] && positions[posName].locked; }
+
+        function showPaymentConfirm(posName) {
+            endingPosition = posName;
+            selectedPayment = null;
+            document.getElementById('paymentConfirmMsg').textContent = `${posName} - 请选择支付方式`;
+            const opts = document.getElementById('paymentConfirmOptions');
+            const methods = ['抖音', '快手', '美团', '微信', '支付宝'];
+            const icons = { '抖音': '🎵', '快手': '📱', '美团': '🟡', '微信': '💚', '支付宝': '💙' };
+            opts.innerHTML = methods.map(m => `<div class="payment-option" data-method="${m}"><span class="payment-icon">${icons[m]}</span><span class="payment-name">${m}</span></div>`).join('');
+            opts.querySelectorAll('.payment-option').forEach(opt => { opt.addEventListener('click', function() { opts.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedPayment = this.dataset.method; }); });
+            document.getElementById('paymentConfirmOverlay').style.display = 'block';
+        }
+
+        function saveAllData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations, positions, activeTimers })); }
+        function loadAllData() { const stored = localStorage.getItem(STORAGE_KEY); if (stored) { try { const data = JSON.parse(stored);
+                    reservations = data.reservations || []; if (data.positions) { positions = {}; for (const k in data.positions) positions[k] = { status: data.positions[k].status || '空闲', reservation: data.positions[k].reservation || null, remark: data.positions[k].remark || '', countdownMinutes: data.positions[k].countdownMinutes || 60, timerMode: data.positions[k].timerMode || '正计时', startTime: data.positions[k].startTime || null, locked: data.positions[k].locked || false }; } if (data.activeTimers) { activeTimers = {}; for (const k in data.activeTimers) { const t = data.activeTimers[k];
+                        activeTimers[k] = t.running ? { ...t, running: false, paused: false, elapsed: t.elapsed || 0, locked: t.locked || false } : { ...t, running: false, paused: false, locked: t.locked || false }; } }
+                    updatePositionStatuses(); } catch (e) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; } } }
+
+        // 其余函数保持不变，为节省篇幅省略中间部分（与上一版本相同）
         function getTodayStr() { return new Date().toISOString().split('T')[0]; }
         function getReservationDate(r) { return r.time.split('T')[0]; }
         function isPositionOccupiedToday(posName) {
@@ -235,31 +262,15 @@
             for (const res of reservations) { if (res.position === posName && getReservationDate(res) === today) return true; }
             return false;
         }
-        function getFilterStatus(posName) {
-            if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') return '使用中';
-            if (positions[posName].status === '已预约') return '已预约';
-            return '空闲';
-        }
-        function isTimerLocked(posName) { return positions[posName] && positions[posName].locked; }
-        function formatStartTime(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 开始`;
-        }
-        function saveRemark(posName) {
-            const ri = document.getElementById(`remark_${posName}`);
-            if (ri) { const v = ri.value.trim(); if (activeTimers[posName]) activeTimers[posName].remark = v;
+        function formatStartTime(date) { if (!date) return ''; const d = new Date(date); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 开始`; }
+        function saveRemark(posName) { const ri = document.getElementById(`remark_${posName}`); if (ri) { const v = ri.value.trim(); if (activeTimers[posName]) activeTimers[posName].remark = v;
                 positions[posName].remark = v;
                 saveAllData();
-                alert('备注已保存！'); }
-        }
-        function deleteRemark(posName) {
-            const ri = document.getElementById(`remark_${posName}`);
-            if (ri) { ri.value = ''; if (activeTimers[posName]) activeTimers[posName].remark = '';
+                alert('备注已保存！'); } }
+        function deleteRemark(posName) { const ri = document.getElementById(`remark_${posName}`); if (ri) { ri.value = ''; if (activeTimers[posName]) activeTimers[posName].remark = '';
                 positions[posName].remark = '';
                 saveAllData();
-                alert('备注已清空！'); }
-        }
+                alert('备注已清空！'); } }
         function onSearch() { const kw = document.getElementById('searchInput').value.trim();
             searchKeyword = kw;
             document.getElementById('searchClear').style.display = kw ? 'inline' : 'none';
@@ -275,15 +286,6 @@
             deleteCallback = null; }
         document.getElementById('deleteConfirmOkBtn').addEventListener('click', function() { if (deleteCallback) { deleteCallback();
                 deleteCallback = null; } document.getElementById('deleteConfirmOverlay').style.display = 'none'; });
-        function showPaymentConfirm(posName) { endingPosition = posName;
-            selectedPayment = null;
-            document.getElementById('paymentConfirmMsg').textContent = `${posName} - 请选择支付方式`;
-            const opts = document.getElementById('paymentConfirmOptions');
-            opts.innerHTML = ['美团','抖音','快手','小红书','线下','自定义'].map(m => `<div class="payment-option" data-method="${m}"><span class="payment-icon">${m==='美团'?'🟡':m==='抖音'?'🎵':m==='快手'?'📱':m==='小红书'?'📖':m==='线下'?'🏪':'✏️'}</span><span class="payment-name">${m}</span></div>`).join('');
-            opts.querySelectorAll('.payment-option').forEach(opt => { opt.addEventListener('click', function() { opts.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
-                    selectedPayment = this.dataset.method; }); });
-            document.getElementById('paymentConfirmOverlay').style.display = 'block'; }
         function closePaymentConfirm() { document.getElementById('paymentConfirmOverlay').style.display = 'none';
             endingPosition = null;
             selectedPayment = null; }
@@ -491,11 +493,6 @@
             XLSX.writeFile(wb, `与己造物_预约_${getTodayStr()}.xlsx`); }
         function exportAllExcel() { const wb = XLSX.utils.book_new(); if (reservations.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['预约时间','姓名','电话','位置','备注','状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])]), '预约记录'); const s = localStorage.getItem('yujizaowu_completion'); if (s) { const a = JSON.parse(s); if (a.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['结束时间','位置','计时时长','备注','支付方式'], ...a.map(r => [new Date(r.time).toLocaleString(), r.position, r.duration, r.remark, r.payment])]), '完成记录'); } if (!wb.SheetNames.length) { alert('无数据！'); return; }
             XLSX.writeFile(wb, `与己造物_全部_${getTodayStr()}.xlsx`); }
-        function saveAllData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations, positions, activeTimers })); }
-        function loadAllData() { const stored = localStorage.getItem(STORAGE_KEY); if (stored) { try { const data = JSON.parse(stored);
-                    reservations = data.reservations || []; if (data.positions) { positions = {}; for (const k in data.positions) positions[k] = { status: data.positions[k].status || '空闲', reservation: data.positions[k].reservation || null, remark: data.positions[k].remark || '', countdownMinutes: data.positions[k].countdownMinutes || 60, timerMode: data.positions[k].timerMode || '正计时', startTime: data.positions[k].startTime || null, locked: data.positions[k].locked || false }; } if (data.activeTimers) { activeTimers = {}; for (const k in data.activeTimers) { const t = data.activeTimers[k];
-                        activeTimers[k] = t.running ? { ...t, running: false, paused: false, elapsed: t.elapsed || 0, locked: t.locked || false } : { ...t, running: false, paused: false, locked: t.locked || false }; } }
-                    updatePositionStatuses(); } catch (e) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; } } }
         window.onload = init;
     </script>
 </body>
