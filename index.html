@@ -8,7 +8,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); overflow: hidden; }
-        .header { background: white; color: #333; padding: 20px; text-align: center; font-size: 26px; font-weight: bold; letter-spacing: 6px; border-bottom: 1px solid #e0e0e0; }
+        .header { background: white; color: #333; padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0; }
+        .header-title { font-size: 26px; font-weight: bold; letter-spacing: 6px; }
+        .header-info { font-size: 12px; color: #999; margin-top: 6px; letter-spacing: 1px; }
+        .header-info span { margin: 0 10px; }
         .tabs { display: flex; background: #fafafa; border-bottom: 1px solid #e0e0e0; }
         .tab-button { flex: 1; padding: 14px 20px; border: none; background: none; cursor: pointer; font-size: 15px; font-weight: bold; color: #999; transition: all 0.3s; position: relative; }
         .tab-button:hover { color: #333; background: #f5f5f5; }
@@ -99,7 +102,13 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">与己造物 · 时光手作</div>
+        <div class="header">
+            <div class="header-title">与己造物</div>
+            <div class="header-info">
+                <span>🕐 营业时间 9:00 - 22:00</span>
+                <span>📞 电话：16653684470</span>
+            </div>
+        </div>
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab('reservation')">预约管理</button>
             <button class="tab-button" onclick="switchTab('timer')">计时管理</button>
@@ -188,8 +197,8 @@
             if (positions[posName].status === '已预约') return '已预约';
             return '空闲';
         }
-        function isTimerActive(posName) {
-            return activeTimers[posName] && (activeTimers[posName].running || activeTimers[posName].paused);
+        function isTimerLocked(posName) {
+            return positions[posName] && positions[posName].locked;
         }
 
         function formatStartTime(date) {
@@ -207,9 +216,7 @@
             const ri = document.getElementById(`remark_${posName}`);
             if (ri) {
                 const newRemark = ri.value.trim();
-                if (activeTimers[posName]) {
-                    activeTimers[posName].remark = newRemark;
-                }
+                if (activeTimers[posName]) activeTimers[posName].remark = newRemark;
                 positions[posName].remark = newRemark;
                 saveAllData();
                 alert('备注已保存！');
@@ -220,9 +227,7 @@
             const ri = document.getElementById(`remark_${posName}`);
             if (ri) {
                 ri.value = '';
-                if (activeTimers[posName]) {
-                    activeTimers[posName].remark = '';
-                }
+                if (activeTimers[posName]) activeTimers[posName].remark = '';
                 positions[posName].remark = '';
                 saveAllData();
                 alert('备注已清空！');
@@ -269,6 +274,7 @@
             positions[p].reservation = null;
             positions[p].remark = '';
             positions[p].startTime = null;
+            positions[p].locked = false;
             closePaymentConfirm();
             updatePositionStatuses();
             renderPositionGrid();
@@ -282,13 +288,14 @@
                     positions[posName].status = '空闲';
                     positions[posName].reservation = null;
                     positions[posName].remark = '';
-                    positions[posName].startTime = null; });
+                    positions[posName].startTime = null;
+                    positions[posName].locked = false; });
                 updatePositionStatuses();
                 renderPositionGrid();
                 updateFilterCounts();
                 saveAllData();
                 alert(`一键关店完成！关闭 ${busyPositions.length} 个座位`); }); }
-        function init() { loadAllData(); if (Object.keys(positions).length === 0) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null }; }
+        function init() { loadAllData(); if (Object.keys(positions).length === 0) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; }
             document.getElementById('resDateTime').value = new Date().toISOString().slice(0, 16);
             updatePositionStatuses();
             updatePositionSelects();
@@ -315,7 +322,7 @@
                 renderPositionGrid();
                 updateFilterCounts(); } }
         function addNewPosition() { const n = document.getElementById('newPositionName').value.trim(); if (!n) { alert('请输入名称！'); return; } if (positions[n]) { alert('已存在！'); return; }
-            positions[n] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null };
+            positions[n] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false };
             document.getElementById('newPositionName').value = '';
             updatePositionSelects();
             renderPositionGrid();
@@ -365,28 +372,39 @@
                     h += `<div class="reservation-item"><div class="reservation-info"><div>⏰ <strong>${t}</strong></div><div>👤 <strong>${r.name}</strong> | 📞 ${r.phone}</div><div>📍 ${r.position} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteReservation(${r.id})">删除</button></div>`; });
                 h += '</div>'; }
             c.innerHTML = h; }
-        function openTable(posName) { if (isPositionOccupiedToday(posName)) { alert('已被占用！'); return; } const ri = document.getElementById(`remark_${posName}`); const ci = document.getElementById(`countdown_${posName}`); const ms = document.getElementById(`mode_${posName}`);
+        function openTable(posName) {
+            if (isPositionOccupiedToday(posName)) { alert('已被占用！'); return; }
+            const ri = document.getElementById(`remark_${posName}`);
+            const ci = document.getElementById(`countdown_${posName}`);
+            const ms = document.getElementById(`mode_${posName}`);
             positions[posName].remark = ri ? ri.value.trim() : '';
-            positions[posName].countdownMinutes = ci && !ci.disabled ? parseInt(ci.value) : 60;
+            positions[posName].countdownMinutes = ci && !ci.disabled ? parseInt(ci.value) : (positions[posName].countdownMinutes || 60);
             positions[posName].timerMode = ms && !ms.disabled ? ms.value : (positions[posName].timerMode || '正计时');
             positions[posName].status = '已开台';
             positions[posName].startTime = null;
-            activeTimers[posName] = { remark: positions[posName].remark, elapsed: 0, mode: positions[posName].timerMode, countdownSeconds: positions[posName].countdownMinutes * 60, running: false, paused: false, startTime: null };
+            positions[posName].locked = false;
+            activeTimers[posName] = { remark: positions[posName].remark, elapsed: 0, mode: positions[posName].timerMode, countdownSeconds: positions[posName].countdownMinutes * 60, running: false, paused: false, startTime: null, locked: false };
             renderPositionGrid();
             updateFilterCounts();
-            saveAllData(); }
-        function startTimer(posName) { if (!activeTimers[posName]) { alert('请先开台！'); return; } if (activeTimers[posName].running) { alert('已在计时中！'); return; }
+            saveAllData();
+        }
+        function startTimer(posName) {
+            if (!activeTimers[posName]) { alert('请先开台！'); return; }
+            if (activeTimers[posName].running) { alert('已在计时中！'); return; }
             const now = new Date().toISOString();
             positions[posName].status = '计时中';
             positions[posName].startTime = now;
+            positions[posName].locked = true;
             activeTimers[posName].running = true;
             activeTimers[posName].paused = false;
             activeTimers[posName].startTime = now;
+            activeTimers[posName].locked = true;
             activeTimers[posName].elapsed = activeTimers[posName].mode === '倒计时' ? activeTimers[posName].countdownSeconds : 0;
             startTimerInterval(posName);
             renderPositionGrid();
             updateFilterCounts();
-            saveAllData(); }
+            saveAllData();
+        }
         function startTimerInterval(posName) { if (timerIntervals[posName]) clearInterval(timerIntervals[posName]);
             timerIntervals[posName] = setInterval(() => { if (!activeTimers[posName] || !activeTimers[posName].running || activeTimers[posName].paused) return; if (activeTimers[posName].mode === '正计时') activeTimers[posName].elapsed++; else { activeTimers[posName].elapsed--; if (activeTimers[posName].elapsed <= 0) { activeTimers[posName].elapsed = 0;
                         activeTimers[posName].running = false;
@@ -396,10 +414,8 @@
         function pauseTimer(posName) { if (!activeTimers[posName]) { alert('未开台！'); return; }
             activeTimers[posName].paused = !activeTimers[posName].paused;
             positions[posName].status = activeTimers[posName].paused ? '已暂停' : '计时中';
-            if (!activeTimers[posName].paused) {
-                positions[posName].startTime = new Date().toISOString();
-                activeTimers[posName].startTime = positions[posName].startTime;
-            }
+            if (!activeTimers[posName].paused) { positions[posName].startTime = new Date().toISOString();
+                activeTimers[posName].startTime = positions[posName].startTime; }
             renderPositionGrid();
             updateFilterCounts();
             saveAllData(); }
@@ -414,9 +430,9 @@
                 m = Math.floor((s % 3600) / 60),
                 sec = Math.floor(s % 60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
         function updateModeInputs(posName) { const ms = document.getElementById(`mode_${posName}`),
-                ci = document.getElementById(`countdown_${posName}`); if (ms && ci) { const isActive = isTimerActive(posName);
-                ms.disabled = isActive;
-                ci.disabled = isActive || ms.value !== '倒计时';
+                ci = document.getElementById(`countdown_${posName}`); if (ms && ci) { const locked = isTimerLocked(posName);
+                ms.disabled = locked;
+                ci.disabled = locked || ms.value !== '倒计时';
                 ci.style.background = ci.disabled ? '#f5f5f5' : 'white';
                 ci.style.color = ci.disabled ? '#ccc' : '#333'; } }
         function updateFilterCounts() { let free = 0,
@@ -450,13 +466,14 @@
                 const rv = activeTimers[posName] ? activeTimers[posName].remark : (d.remark || '');
                 const cv = d.countdownMinutes || 60,
                     mv = d.timerMode || '正计时';
-                const isActive = isTimerActive(posName);
-                const modeDisabled = isActive ? 'disabled' : '';
-                const ciDisabled = isActive ? 'disabled' : (mv === '正计时' ? 'disabled' : '');
+                const locked = isTimerLocked(posName) || s === '已开台';
+                const modeDisabled = locked ? 'disabled' : '';
+                const ciDisabled = locked ? 'disabled' : (mv === '正计时' ? 'disabled' : '');
+                const remarkDisabled = locked ? '' : '';
                 const hl = searchKeyword && posName.includes(searchKeyword) ? ' highlight' : '';
                 const startTimeStr = (activeTimers[posName] && activeTimers[posName].startTime) ? formatStartTime(activeTimers[posName].startTime) : (d.startTime ? formatStartTime(d.startTime) : '');
                 const startTimeHtml = startTimeStr ? `<div class="position-start-time">${startTimeStr}</div>` : '';
-                h += `<div class="position-card${hl}"><button class="delete-position-btn" onclick="event.stopPropagation();deletePosition('${posName}')">×</button><div class="position-header"><span class="position-name">${posName}</span><div class="status-lights"><div class="status-light light-green ${ga}"></div><div class="status-light light-yellow ${ya}"></div><div class="status-light light-red ${ra}"></div><div class="status-light light-blue ${ba}"></div></div></div><div style="font-size:10px;color:#999;margin-bottom:4px;">${st}</div>${startTimeHtml}<div class="position-timer-display" id="timer_${posName}">${tv}</div><div class="position-info-item"><label>备注</label><div class="remark-row"><input class="position-remark-input" id="remark_${posName}" value="${rv.replace(/"/g,'&quot;')}" ${isActive ? 'disabled' : ''}><button class="btn btn-success btn-xs" onclick="event.stopPropagation();saveRemark('${posName}')">保存</button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteRemark('${posName}')">删除</button></div></div><div class="position-info-item"><label>计时模式</label><select class="position-mode-select" id="mode_${posName}" onchange="updateModeInputs('${posName}')" ${modeDisabled}><option value="正计时" ${mv==='正计时'?'selected':''}>正计时</option><option value="倒计时" ${mv==='倒计时'?'selected':''}>倒计时</option></select></div><div class="position-info-item"><label>倒计时(分钟)</label><input type="number" class="position-countdown-input" id="countdown_${posName}" value="${cv}" min="1" ${ciDisabled}></div><div class="position-controls"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openTable('${posName}')">开台</button><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startTimer('${posName}')">开始</button><button class="btn btn-warning btn-sm" onclick="event.stopPropagation();pauseTimer('${posName}')">暂停</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();endTimer('${posName}')">结束</button></div></div>`;
+                h += `<div class="position-card${hl}"><button class="delete-position-btn" onclick="event.stopPropagation();deletePosition('${posName}')">×</button><div class="position-header"><span class="position-name">${posName}</span><div class="status-lights"><div class="status-light light-green ${ga}"></div><div class="status-light light-yellow ${ya}"></div><div class="status-light light-red ${ra}"></div><div class="status-light light-blue ${ba}"></div></div></div><div style="font-size:10px;color:#999;margin-bottom:4px;">${st}</div>${startTimeHtml}<div class="position-timer-display" id="timer_${posName}">${tv}</div><div class="position-info-item"><label>备注</label><div class="remark-row"><input class="position-remark-input" id="remark_${posName}" value="${rv.replace(/"/g,'&quot;')}" ${remarkDisabled}><button class="btn btn-success btn-xs" onclick="event.stopPropagation();saveRemark('${posName}')">保存</button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteRemark('${posName}')">删除</button></div></div><div class="position-info-item"><label>计时模式</label><select class="position-mode-select" id="mode_${posName}" onchange="updateModeInputs('${posName}')" ${modeDisabled}><option value="正计时" ${mv==='正计时'?'selected':''}>正计时</option><option value="倒计时" ${mv==='倒计时'?'selected':''}>倒计时</option></select></div><div class="position-info-item"><label>倒计时(分钟)</label><input type="number" class="position-countdown-input" id="countdown_${posName}" value="${cv}" min="1" ${ciDisabled}></div><div class="position-controls"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openTable('${posName}')">开台</button><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startTimer('${posName}')">开始</button><button class="btn btn-warning btn-sm" onclick="event.stopPropagation();pauseTimer('${posName}')">暂停</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();endTimer('${posName}')">结束</button></div></div>`;
             });
             if (count === 0) h = '<div class="no-result">未找到匹配的座位</div>';
             g.innerHTML = h;
@@ -468,8 +485,9 @@
             XLSX.writeFile(wb, `与己造物_全部_${getTodayStr()}.xlsx`); }
         function saveAllData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations, positions, activeTimers })); }
         function loadAllData() { const stored = localStorage.getItem(STORAGE_KEY); if (stored) { try { const data = JSON.parse(stored);
-                    reservations = data.reservations || []; if (data.positions) { positions = {}; for (const k in data.positions) positions[k] = { status: data.positions[k].status || '空闲', reservation: data.positions[k].reservation || null, remark: data.positions[k].remark || '', countdownMinutes: data.positions[k].countdownMinutes || 60, timerMode: data.positions[k].timerMode || '正计时', startTime: data.positions[k].startTime || null }; } if (data.activeTimers) { activeTimers = {}; for (const k in data.activeTimers) activeTimers[k] = data.activeTimers[k].running ? { ...data.activeTimers[k], running: false, paused: false, elapsed: data.activeTimers[k].elapsed || 0 } : data.activeTimers[k]; }
-                    updatePositionStatuses(); } catch (e) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null }; } } }
+                    reservations = data.reservations || []; if (data.positions) { positions = {}; for (const k in data.positions) positions[k] = { status: data.positions[k].status || '空闲', reservation: data.positions[k].reservation || null, remark: data.positions[k].remark || '', countdownMinutes: data.positions[k].countdownMinutes || 60, timerMode: data.positions[k].timerMode || '正计时', startTime: data.positions[k].startTime || null, locked: data.positions[k].locked || false }; } if (data.activeTimers) { activeTimers = {}; for (const k in data.activeTimers) { const t = data.activeTimers[k];
+                        activeTimers[k] = t.running ? { ...t, running: false, paused: false, elapsed: t.elapsed || 0, locked: t.locked || false } : { ...t, running: false, paused: false, locked: t.locked || false }; } }
+                    updatePositionStatuses(); } catch (e) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; } } }
         window.onload = init;
     </script>
 </body>
