@@ -1,536 +1,418 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>与己造物</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>与己造物 · 手工店计时</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; background: #f5f5f5; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); overflow: hidden; }
-        .header { background: white; color: #333; padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0; }
-        .header-title { font-size: 26px; font-weight: bold; letter-spacing: 6px; }
-        .header-info { font-size: 12px; color: #999; margin-top: 6px; letter-spacing: 1px; }
-        .header-info span { margin: 0 10px; }
-        .tabs { display: flex; background: #fafafa; border-bottom: 1px solid #e0e0e0; }
-        .tab-button { flex: 1; padding: 14px 20px; border: none; background: none; cursor: pointer; font-size: 15px; font-weight: bold; color: #999; transition: all 0.3s; position: relative; }
-        .tab-button:hover { color: #333; background: #f5f5f5; }
-        .tab-button.active { color: #333; background: white; }
-        .tab-button.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: #333; }
-        .tab-content { display: none; padding: 25px; min-height: 600px; background: white; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif; background: #f7f5f2; color: #2e241f; padding: 12px; min-height: 100vh; }
+        .app { max-width: 1800px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+        .shop-name-wrapper { display: flex; align-items: center; gap: 8px; }
+        .shop-name { font-size: 1.4rem; font-weight: 400; letter-spacing: 3px; color: #3b2b24; border-left: 4px solid #b28b6f; padding-left: 14px; }
+        .shop-name small { font-size: 0.85rem; color: #7f6a5c; margin-left: 6px; }
+        .admin-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .btn { background: #e3d9d1; border: 1px solid #b8a69a; color: #2e241f; padding: 7px 12px; border-radius: 24px; font-size: 0.8rem; cursor: pointer; font-weight: 500; user-select: none; transition: all 0.15s; white-space: nowrap; }
+        .btn:hover { background: #cdbcaf; }
+        .btn-primary { background: #5e4b3c; border-color: #3f3228; color: #fdf6ef; }
+        .btn-success { background: #4a7c59; border-color: #3a6347; color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; border: 1px solid #d6c9bf; background: #fefcf9; border-radius: 24px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        .tab-btn.active { background: #5e4b3c; color: #fdf6ef; border-color: #3f3228; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .reservation-layout { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-        .form-section { background: #fafafa; padding: 25px; border-radius: 12px; border: 1px solid #e0e0e0; }
-        .form-title { font-size: 20px; color: #333; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #333; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; color: #666; font-weight: bold; font-size: 13px; }
-        .form-group label .optional { color: #999; font-weight: normal; font-size: 11px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; color: #333; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #333; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
-        .custom-remark-input { margin-top: 6px; display: none; }
-        .custom-remark-input.show { display: block; }
-        .btn { padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.3s; background: white; color: #333; }
-        .btn:hover { background: #f5f5f5; border-color: #333; }
-        .btn-primary { background: #333; color: white; border-color: #333; }
-        .btn-primary:hover { background: #555; border-color: #555; }
-        .btn-danger { color: #e74c3c; border-color: #e74c3c; }
-        .btn-danger:hover { background: #e74c3c; color: white; }
-        .btn-warning { color: #f39c12; border-color: #f39c12; }
-        .btn-success { color: #27ae60; border-color: #27ae60; }
-        .btn-info { color: #2980b9; border-color: #2980b9; }
-        .btn-dark { background: #333; color: white; border-color: #333; }
-        .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 4px; }
-        .btn-sm { padding: 5px 10px; font-size: 10px; border-radius: 4px; }
-        .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .reservation-list { background: #fafafa; padding: 20px; border-radius: 12px; overflow-y: auto; max-height: 600px; border: 1px solid #e0e0e0; }
-        .reservation-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-        .reservation-date-group { margin-bottom: 20px; }
-        .date-header { background: white; color: #333; padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; font-weight: bold; font-size: 14px; border: 1px solid #e0e0e0; }
-        .reservation-item { background: white; padding: 14px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; font-size: 13px; }
-        .reservation-info div { margin-bottom: 4px; color: #666; }
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; background: #f0f0f0; color: #333; }
-        .badge-meituan { background: #FFD100; color: #333; }
-        .badge-douyin { background: #000; color: #fff; }
-        .badge-kuaishou { background: #FF4906; color: #fff; }
-        .badge-xiaohongshu { background: #FE2C55; color: #fff; }
-        .badge-xianxia { background: #27ae60; color: #fff; }
-        .badge-custom { background: #3498db; color: #fff; }
-        .timer-layout { display: flex; flex-direction: column; gap: 15px; }
-        .top-bar { background: #fafafa; padding: 8px 12px; border-radius: 6px; display: flex; gap: 8px; align-items: center; border: 1px solid #e0e0e0; flex-wrap: wrap; }
-        .top-bar input { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 12px; }
-        .top-bar input:focus { outline: none; border-color: #333; }
-        .search-input { width: 120px; }
-        .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .filter-btn { padding: 5px 12px; border: 1px solid #ddd; border-radius: 15px; font-size: 12px; cursor: pointer; transition: all 0.3s; background: white; color: #666; }
-        .filter-btn:hover { border-color: #333; color: #333; }
-        .filter-btn.active { background: #333; color: white; border-color: #333; }
-        .filter-count { font-size: 11px; color: #999; margin-left: 2px; }
-        .filter-btn.active .filter-count { color: #ddd; }
-        .search-clear { cursor: pointer; color: #999; font-size: 14px; margin-left: -25px; z-index: 1; background: none; border: none; display: none; }
-        .position-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; padding: 10px; max-height: 650px; overflow-y: auto; }
-        .position-card { background: white; border-radius: 8px; padding: 10px; border: 1px solid #e0e0e0; position: relative; }
-        .position-card.highlight { border-color: #333; box-shadow: 0 0 12px rgba(0,0,0,0.15); }
-        .position-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #f0f0f0; }
-        .position-name { font-size: 14px; font-weight: bold; color: #333; }
-        .status-lights { display: flex; gap: 4px; }
-        .status-light { width: 8px; height: 8px; border-radius: 50%; background: #e0e0e0; border: 1px solid #ccc; }
-        .light-green.active { background: #27ae60; border-color: #27ae60; box-shadow: 0 0 6px rgba(39,174,96,0.4); }
-        .light-yellow.active { background: #f39c12; border-color: #f39c12; box-shadow: 0 0 6px rgba(243,156,18,0.4); }
-        .light-red.active { background: #e74c3c; border-color: #e74c3c; box-shadow: 0 0 6px rgba(231,76,60,0.4); animation: blink 1s infinite; }
-        .light-blue.active { background: #3498db; border-color: #3498db; box-shadow: 0 0 6px rgba(52,152,219,0.4); }
-        @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
-        .position-start-time { font-size: 11px; color: #999; text-align: center; margin-bottom: 2px; }
-        .position-timer-display { font-size: 22px; font-weight: bold; text-align: center; color: #333; font-family: 'Courier New',monospace; margin: 4px 0; padding: 6px; background: #fafafa; border-radius: 5px; border: 1px solid #e0e0e0; }
-        .position-info-item { margin-bottom: 5px; }
-        .position-info-item label { font-size: 10px; color: #999; display: block; margin-bottom: 2px; }
-        .position-remark-input, .position-mode-select, .position-countdown-input { width: 100%; padding: 4px 6px; border: 1px solid #e0e0e0; border-radius: 4px; background: white; font-size: 11px; }
-        .position-mode-select:disabled, .position-countdown-input:disabled { background: #f5f5f5; color: #999; cursor: not-allowed; }
-        .position-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
-        .position-controls .btn { font-size: 10px; padding: 4px 2px; }
-        .remark-row { display: flex; gap: 4px; align-items: center; }
-        .remark-row input { flex: 1; }
-        .remark-row .btn { font-size: 10px; padding: 4px 6px; white-space: nowrap; }
-        .delete-position-btn { position: absolute; top: 4px; right: 6px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; z-index: 10; }
-        .delete-position-btn:hover { color: #e74c3c; }
-        .custom-confirm-overlay { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px); }
-        .custom-confirm-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); padding: 30px; min-width: 360px; max-width: 90vw; text-align: center; }
-        .custom-confirm-icon { font-size: 48px; margin-bottom: 16px; }
-        .custom-confirm-message { font-size: 15px; color: #333; margin-bottom: 24px; line-height: 1.6; white-space: pre-line; }
-        .custom-confirm-buttons { display: flex; gap: 12px; justify-content: center; }
-        .custom-confirm-buttons .btn { min-width: 100px; }
-        .payment-options { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin: 20px 0; }
-        .payment-option { padding: 12px 8px; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; text-align: center; }
-        .payment-option:hover { border-color: #333; background: #fafafa; }
-        .payment-option.selected { border-color: #333; background: #f5f5f5; }
-        .payment-icon { font-size: 28px; display: block; margin-bottom: 4px; }
-        .payment-name { font-weight: bold; font-size: 12px; }
-        .no-result { text-align: center; color: #999; padding: 40px; grid-column: 1/-1; }
-        @media (max-width:768px) { .reservation-layout { grid-template-columns: 1fr; } .position-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
+        .stats-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .stat-card { background: #fefcf9; border-radius: 20px; padding: 8px 18px; border: 1px solid #e2d6cd; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; }
+        .stat-card.active { background: #5e4b3c; color: #fdf6ef; }
+        .stat-number { font-size: 1.4rem; font-weight: 600; min-width: 35px; }
+        .seats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .seat-card { background: #fefcf9; border-radius: 14px; padding: 12px; border: 1px solid #e2d6cd; }
+        .seat-card.hidden { display: none; }
+        .seat-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .seat-name { font-weight: 700; font-size: 1rem; }
+        .seat-status { font-size: 0.6rem; padding: 2px 6px; border-radius: 20px; background: #ede6df; }
+        .status-active { background: #cbd9c0; }
+        .status-paused { background: #f3e1c2; }
+        .status-idle { background: #e5dfd9; }
+        .timer-display { font-family: 'Courier New', monospace; font-size: 1.4rem; text-align: center; margin: 6px 0; background: #f3ede7; padding: 5px 0; border-radius: 10px; }
+        .mode-badge { font-size: 0.6rem; background: #cfc1b6; display: inline-block; padding: 2px 8px; border-radius: 20px; margin: 0 auto 5px; text-align: center; }
+        .seat-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0; }
+        .seat-actions .btn { flex: 1 0 35px; padding: 4px 2px; font-size: 0.6rem; }
+        .notes-selector-wrapper { margin-top: 6px; border-top: 1px dashed #d6c9bf; padding-top: 6px; }
+        .remark-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+        .remark-row select { flex: 1; min-width: 80px; padding: 5px 8px; border: 1px solid #d6c9bf; border-radius: 16px; font-size: 0.65rem; background: #fffbf8; }
+        .remark-row input { flex: 2; min-width: 100px; padding: 5px 8px; border: 1px solid #d6c9bf; border-radius: 16px; font-size: 0.65rem; background: #fffbf8; }
+        .current-note-display { margin-top: 4px; font-size: 0.55rem; color: #5e4b3c; padding: 2px 5px; background: #f4ede6; border-radius: 10px; }
+        .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #3b2b24; color: #f0e4da; padding: 8px 20px; border-radius: 40px; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 9999; }
+        .toast-message.show { opacity: 1; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(2px); }
+        .modal-overlay.hidden { display: none !important; }
+        .modal { background: #fefcf9; border-radius: 24px; padding: 20px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin-bottom: 16px; color: #3b2b24; font-size: 1.1rem; }
+        .modal-input-group { margin-bottom: 14px; }
+        .modal-input-group label { display: block; margin-bottom: 5px; color: #5f4e43; font-size: 0.8rem; }
+        .modal-input-group input, .modal-input-group select { width: 100%; padding: 10px 12px; border: 1px solid #d6c9bf; border-radius: 20px; font-size: 0.9rem; background: #fffbf8; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        .records-list { margin: 14px 0; max-height: 280px; overflow-y: auto; }
+        .record-item { padding: 7px 10px; border-bottom: 1px solid #e2d6cd; font-size: 0.75rem; }
+        .footer-note { margin-top: 16px; color: #a28d7e; font-size: 0.7rem; text-align: center; border-top: 1px dashed #d9ccc2; padding-top: 10px; }
+        .payment-methods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 14px 0; }
+        .payment-option { padding: 12px 8px; border: 2px solid #d6c9bf; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fffbf8; }
+        .payment-option.selected { border-color: #5e4b3c; background: #5e4b3c; color: #fdf6ef; }
+        .payment-option .payment-icon { font-size: 1.4rem; margin-bottom: 4px; }
+        .payment-option .payment-name { font-size: 0.75rem; font-weight: 500; }
+        .payment-hint { text-align: center; color: #999; font-size: 0.75rem; margin-top: 8px; }
+        .reservation-form { background: #fefcf9; border-radius: 14px; padding: 20px; border: 1px solid #e2d6cd; }
+        .reservation-form h3 { margin-bottom: 16px; color: #3b2b24; font-size: 1.1rem; }
+        .reservation-list { margin-top: 20px; }
+        .reservation-item { background: #fefcf9; border-radius: 10px; padding: 10px; border: 1px solid #e2d6cd; margin-bottom: 8px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+        .reservation-item .info { flex: 1; }
+        .reservation-item .badge { font-size: 0.6rem; padding: 2px 8px; border-radius: 12px; background: #e2d6cd; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .time-input-group { display: flex; gap: 8px; align-items: center; }
+        .time-input-group input { width: 60px; text-align: center; }
+        .time-input-group span { color: #7f6a5c; font-weight: bold; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
     </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-title">与己造物</div>
-            <div class="header-info">
-                <span>🕐 营业时间：9:00 - 22:00</span>
-                <span>📞 电话：16653684470</span>
-            </div>
+<div class="app">
+    <div id="toast" class="toast-message"></div>
+
+    <div class="header">
+        <div class="shop-name-wrapper"><div class="shop-name"><span>与己造物</span><small>· 手作时光</small></div></div>
+        <div class="admin-actions">
+            <button class="btn btn-sm" id="addSeatBtn">+座位</button>
+            <span id="seatCountDisplay">36</span>
+            <button class="btn btn-sm btn-primary" id="resetAllIdleBtn">全部空闲</button>
+            <button class="btn btn-sm btn-success" id="viewRecordsBtn">记录</button>
+            <button class="btn btn-sm btn-success" id="exportRecordsBtn">导出</button>
         </div>
-        <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('reservation')">预约管理</button>
-            <button class="tab-button" onclick="switchTab('timer')">计时管理</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="timer">⏱️ 计时管理</button>
+        <button class="tab-btn" data-tab="reservation">📋 预约管理</button>
+    </div>
+
+    <div class="tab-content active" id="tabTimer">
+        <div class="stats-bar">
+            <div class="stat-card active" data-filter="all"><span class="stat-number" id="statAll">36</span><span>全部</span></div>
+            <div class="stat-card" data-filter="active"><span class="stat-number" id="statActive">0</span><span>使用中</span></div>
+            <div class="stat-card" data-filter="idle"><span class="stat-number" id="statIdle">36</span><span>空闲</span></div>
         </div>
-        <div id="reservationTab" class="tab-content active">
-            <div class="reservation-layout">
-                <div class="form-section">
-                    <div class="form-title"><span>新增预约</span></div>
-                    <div class="form-group"><label>姓名 <span class="optional">(选填)</span></label><input type="text" id="resName" placeholder="请输入顾客姓名（可不填）"></div>
-                    <div class="form-group"><label>电话</label><input type="text" id="resPhone" placeholder="请输入联系电话"></div>
-                    <div class="form-group"><label>预约时间</label><input type="datetime-local" id="resDateTime"></div>
-                    <div class="form-group"><label>位置（选填）</label><select id="resPosition"><option value="不指定">不指定位置</option></select></div>
-                    <div class="form-group">
-                        <label>备注</label>
-                        <select id="resRemark" onchange="toggleCustomRemark()">
-                            <option value="美团">美团</option>
-                            <option value="快手">快手</option>
+        <div id="seatsContainer" class="seats-grid"></div>
+        <div class="footer-note"><p>点击「开台」开始计时 · 结束必须选择收款方式</p></div>
+    </div>
+
+    <div class="tab-content" id="tabReservation">
+        <div class="two-col">
+            <div class="reservation-form">
+                <h3>新增预约</h3>
+                <div class="modal-input-group"><label>👤 姓名 <span style="color:#999;">(选填)</span></label><input type="text" id="resNameInput" placeholder="请输入顾客姓名（可不填）"></div>
+                <div class="modal-input-group"><label>📞 电话 *</label><input type="text" id="resPhoneInput" placeholder="请输入联系电话"></div>
+                <div class="modal-input-group"><label>📅 预约时间 *</label><input type="datetime-local" id="resDateTimeInput"></div>
+                <div class="modal-input-group"><label>📍 座位</label><select id="resSeatSelect"><option value="">不指定座位</option></select></div>
+                <div class="modal-input-group">
+                    <label>📌 备注</label>
+                    <div class="remark-row">
+                        <select id="resNoteSelect">
                             <option value="抖音">抖音</option>
+                            <option value="快手">快手</option>
+                            <option value="美团">美团</option>
                             <option value="小红书">小红书</option>
-                            <option value="自定义">自定义</option>
+                            <option value="线下">线下</option>
                         </select>
-                        <input type="text" id="resCustomRemark" class="custom-remark-input" placeholder="请输入自定义备注内容">
+                        <input type="text" id="resCustomNoteInput" placeholder="或直接输入自定义备注">
                     </div>
-                    <div class="btn-group"><button class="btn btn-primary" onclick="addReservation()">添加预约</button><button class="btn" onclick="clearForm()">清空表单</button></div>
                 </div>
-                <div class="reservation-list">
-                    <div class="reservation-list-header"><span style="font-size:16px;font-weight:bold;">预约列表</span><button class="btn btn-xs" onclick="exportReservationsExcel()">导出Excel</button></div>
-                    <div id="reservationListContent"><div style="text-align:center;color:#999;padding:50px;">暂无预约记录</div></div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="addReservationBtn">添加预约</button>
+                    <button class="btn" id="clearResFormBtn">清空</button>
                 </div>
             </div>
-        </div>
-        <div id="timerTab" class="tab-content">
-            <div class="timer-layout">
-                <div class="top-bar">
-                    <input type="text" id="newPositionName" placeholder="新位置名称" style="width:110px;">
-                    <button class="btn btn-info btn-xs" onclick="addNewPosition()">添加</button>
-                    <span style="color:#ddd;">|</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="搜索座位..." oninput="onSearch()">
-                    <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
-                    <span style="color:#ddd;">|</span>
-                    <div class="filter-bar" id="filterBar">
-                        <button class="filter-btn active" data-filter="all">全部<span class="filter-count" id="countAll"></span></button>
-                        <button class="filter-btn" data-filter="空闲">空闲<span class="filter-count" id="countFree"></span></button>
-                        <button class="filter-btn" data-filter="使用中">使用中<span class="filter-count" id="countBusy"></span></button>
-                        <button class="filter-btn" data-filter="已预约">预约中<span class="filter-count" id="countReserved"></span></button>
-                    </div>
-                    <span style="color:#ddd;">|</span>
-                    <button class="btn btn-dark btn-xs" onclick="closeAllTables()" style="background:#c0392b;border-color:#c0392b;color:white;">一键关店</button>
-                    <button class="btn btn-xs" onclick="exportAllExcel()" style="margin-left:auto;">导出</button>
-                </div>
-                <div class="position-grid" id="positionGrid"></div>
+            <div class="reservation-list">
+                <h3 style="margin-bottom:14px;">预约列表 <button class="btn btn-sm btn-success" id="exportReservationsBtn" style="float:right;">导出</button></h3>
+                <div id="reservationList"></div>
             </div>
         </div>
     </div>
 
-    <div id="paymentConfirmOverlay" class="custom-confirm-overlay">
-        <div class="custom-confirm-box">
-            <div class="custom-confirm-icon">💳</div>
-            <div class="custom-confirm-message" id="paymentConfirmMsg"></div>
-            <div class="payment-options" id="paymentConfirmOptions"></div>
-            <div class="custom-confirm-buttons"><button class="btn btn-primary" id="paymentConfirmBtn">确认结束</button><button class="btn" onclick="closePaymentConfirm()">取消</button></div>
+    <!-- 倒计时模态框 - 精确到秒 -->
+    <div id="customTimeModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>⏱️ 设置倒计时（精确到秒）</h3>
+            <div class="modal-input-group">
+                <label>倒计时时间</label>
+                <div class="time-input-group">
+                    <input type="number" id="customHoursInput" placeholder="时" min="0" value="1" step="1">
+                    <span>时</span>
+                    <input type="number" id="customMinutesInput" placeholder="分" min="0" max="59" value="0" step="1">
+                    <span>分</span>
+                    <input type="number" id="customSecondsInput" placeholder="秒" min="0" max="59" value="0" step="1">
+                    <span>秒</span>
+                </div>
+                <div style="margin-top:8px;font-size:0.7rem;color:#999;">总秒数：<span id="totalSecondsDisplay">3600</span> 秒</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="cancelCustomBtn">取消</button>
+                <button class="btn btn-primary" id="confirmCustomBtn">确定开始倒计时</button>
+            </div>
         </div>
     </div>
 
-    <div id="deleteConfirmOverlay" class="custom-confirm-overlay">
-        <div class="custom-confirm-box">
-            <div class="custom-confirm-icon">⚠️</div>
-            <div class="custom-confirm-message" id="deleteConfirmMsg"></div>
-            <div class="custom-confirm-buttons"><button class="btn btn-danger" id="deleteConfirmOkBtn">确认删除</button><button class="btn" onclick="closeDeleteConfirm()">取消</button></div>
-        </div>
-    </div>
+    <div id="paymentModal" class="modal-overlay hidden"><div class="modal"><h3>💰 选择收款方式</h3><div id="paymentSeatInfo" style="margin-bottom:12px;color:#5f4e43;"></div><div class="payment-methods"><div class="payment-option" data-payment="抖音团购"><div class="payment-icon">🎵</div><div class="payment-name">抖音团购</div></div><div class="payment-option" data-payment="美团团购"><div class="payment-icon">🍔</div><div class="payment-name">美团团购</div></div><div class="payment-option" data-payment="支付宝"><div class="payment-icon">💙</div><div class="payment-name">支付宝</div></div><div class="payment-option" data-payment="微信"><div class="payment-icon">💚</div><div class="payment-name">微信</div></div></div><div class="payment-hint">👆 请选择一种收款方式</div><div class="modal-actions"><button class="btn" id="cancelPaymentBtn">取消</button><button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button></div></div></div>
+    <div id="recordsModal" class="modal-overlay hidden"><div class="modal"><h3>每日使用记录</h3><div style="display:flex;gap:8px;margin:16px 0;"><input type="date" id="recordDateInput" style="flex:1;padding:8px;border-radius:20px;border:1px solid #d6c9bf;"><button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button></div><div class="records-list" id="recordsList"></div><div class="modal-actions"><button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button><button class="btn btn-sm" id="closeRecordsBtn">关闭</button></div></div></div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script>
-        let positions = {};
-        let reservations = [];
-        let activeTimers = {};
-        let timerIntervals = {};
-        let selectedPayment = null;
-        let endingPosition = null;
-        let deleteCallback = null;
-        let currentFilter = 'all';
-        let searchKeyword = '';
-        const STORAGE_KEY = 'yujizaowu_data';
+<script>
+(function(){
+    "use strict";
+    const STORAGE_KEY = 'yzw_seats_v13';
+    const RECORDS_KEY = 'yzw_records_v13';
+    const RESERVATIONS_KEY = 'yzw_reservations_v13';
+    const DEFAULT_SEAT_COUNT = 36;
+    const PRESET_NOTES = ['', '抖音全天', '美团全天', '抖音小时', '美团小时'];
 
-        function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-        function getReservationDate(r) { return r.time.split('T')[0]; }
-        function isPositionOccupiedToday(posName) {
-            if (positions[posName] && (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停')) return true;
-            const today = getTodayStr();
-            for (const res of reservations) { if (res.position === posName && getReservationDate(res) === today) return true; }
-            return false;
-        }
-        function getFilterStatus(posName) {
-            if (positions[posName].status === '计时中' || positions[posName].status === '已开台' || positions[posName].status === '已暂停') return '使用中';
-            if (positions[posName].status === '已预约') return '已预约';
-            return '空闲';
-        }
-        function isTimerLocked(posName) { return positions[posName] && positions[posName].locked; }
-        function formatStartTime(date) { if (!date) return ''; const d = new Date(date); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 开始`; }
-        function formatTime(s) { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+    let seats = [], usageRecords = [], reservations = [], globalTimer = null;
+    let pendingCustomSeatId = null, pendingEndSeatId = null, selectedPayment = null, currentFilter = 'all';
+    const $ = id => document.getElementById(id);
+    const toastEl = $('toast');
+    function showToast(msg, d = 1500) { toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => toastEl.classList.remove('show'), d); }
 
-        function toggleCustomRemark() {
-            const select = document.getElementById('resRemark');
-            const customInput = document.getElementById('resCustomRemark');
-            if (select.value === '自定义') { customInput.classList.add('show');
-                customInput.focus(); } else { customInput.classList.remove('show');
-                customInput.value = ''; }
-        }
-        function getBadgeClass(remark) {
-            const map = { '美团': 'badge-meituan', '抖音': 'badge-douyin', '快手': 'badge-kuaishou', '小红书': 'badge-xiaohongshu', '线下': 'badge-xianxia' };
-            return map[remark] || 'badge-custom';
-        }
+    function createDefaultSeat(id) { return { id, name: id + '号桌', status: 'idle', timerMode: 'countup', countdownInitial: 3600, accumulatedSeconds: 0, running: false, startTimestamp: null, notes: '', customNote: '' }; }
+    function loadSeats() { try { const p = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (Array.isArray(p) && p.length) { seats = p; return; } } catch(e) {} seats = Array.from({length: DEFAULT_SEAT_COUNT}, (_, i) => createDefaultSeat(i+1));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }
+    function loadRecords() { try { usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; } catch(e) { usageRecords = []; } }
+    function loadReservations() { try { reservations = JSON.parse(localStorage.getItem(RESERVATIONS_KEY)) || []; } catch(e) { reservations = []; } }
+    function getSeatIndex(id) { return seats.findIndex(s => s.id === id); }
+    function getCurrentSeconds(seat) { let b = seat.accumulatedSeconds || 0; if (seat.running && seat.startTimestamp) b += (Date.now() - seat.startTimestamp) / 1000; return b; }
+    function formatTime(s) { s = Math.max(0, s); const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60); return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
+    function getTimerText(seat) { return seat.timerMode === 'countdown' ? formatTime(Math.max(0, seat.countdownInitial - getCurrentSeconds(seat))) : formatTime(getCurrentSeconds(seat)); }
+    function stopRunning(seat) { if (seat.running && seat.startTimestamp) { seat.accumulatedSeconds += (Date.now() - seat.startTimestamp) / 1000;
+            seat.running = false;
+            seat.startTimestamp = null; } }
+    function getDisplayNote(seat) { return seat.customNote || seat.notes || ''; }
 
-        function onSearch() { const kw = document.getElementById('searchInput').value.trim();
-            searchKeyword = kw;
-            document.getElementById('searchClear').style.display = kw ? 'inline' : 'none';
-            renderPositionGrid(); }
-        function clearSearch() { document.getElementById('searchInput').value = '';
-            searchKeyword = '';
-            document.getElementById('searchClear').style.display = 'none';
-            renderPositionGrid(); }
-        function showDeleteConfirm(msg, cb) { document.getElementById('deleteConfirmMsg').textContent = msg;
-            document.getElementById('deleteConfirmOverlay').style.display = 'block';
-            deleteCallback = cb; }
-        function closeDeleteConfirm() { document.getElementById('deleteConfirmOverlay').style.display = 'none';
-            deleteCallback = null; }
+    function actionOpenTable(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].status = 'active';
+        seats[idx].accumulatedSeconds = 0;
+        seats[idx].running = false;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        renderAdminGrid(); }
+    function actionStart(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return; if (seats[idx].status === 'idle') { showToast('⚠️ 请先开台'); return; } if (seats[idx].running) return;
+        seats[idx].running = true;
+        seats[idx].startTimestamp = Date.now();
+        seats[idx].status = 'active';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        updateSingleCard(seats[idx]); }
+    function actionPause(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].status = 'paused';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        updateSingleCard(seats[idx]); }
+    function actionEndWithPayment(seatId, paymentMethod) { const idx = getSeatIndex(seatId); if (idx === -1) return; const seat = seats[idx];
+        stopRunning(seat); const duration = formatTime(seat.accumulatedSeconds);
+        usageRecords.push({ id: Date.now() + Math.random(), seatName: seat.name, action: '结束使用', duration, notes: getDisplayNote(seat), paymentMethod, timestamp: new Date().toISOString() });
+        seat.status = 'idle';
+        seat.accumulatedSeconds = 0;
+        seat.notes = '';
+        seat.customNote = '';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
+        renderAdminGrid(); }
+    function actionReset(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].accumulatedSeconds = 0;
+        seats[idx].notes = '';
+        seats[idx].customNote = '';
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        updateSingleCard(seats[idx]); }
+    function actionToggleMode(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        stopRunning(seats[idx]);
+        seats[idx].timerMode = seats[idx].timerMode === 'countup' ? 'countdown' : 'countup';
+        seats[idx].accumulatedSeconds = 0;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        updateSingleCard(seats[idx]); }
 
-        function showPaymentConfirm(posName) {
-            endingPosition = posName;
-            selectedPayment = null;
-            document.getElementById('paymentConfirmMsg').textContent = `${posName} - 请选择支付方式`;
-            const opts = document.getElementById('paymentConfirmOptions');
-            const methods = ['抖音', '快手', '美团', '微信', '支付宝'];
-            const icons = { '抖音': '🎵', '快手': '📱', '美团': '🟡', '微信': '💚', '支付宝': '💙' };
-            opts.innerHTML = methods.map(m => `<div class="payment-option" data-method="${m}"><span class="payment-icon">${icons[m]}</span><span class="payment-name">${m}</span></div>`).join('');
-            opts.querySelectorAll('.payment-option').forEach(opt => { opt.addEventListener('click', function() { opts.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
-                    selectedPayment = this.dataset.method; }); });
-            document.getElementById('paymentConfirmOverlay').style.display = 'block';
-        }
-        function closePaymentConfirm() { document.getElementById('paymentConfirmOverlay').style.display = 'none';
-            endingPosition = null;
-            selectedPayment = null; }
+    function saveSeatNote(seatId, noteSelect, customNote) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        seats[idx].notes = noteSelect;
+        seats[idx].customNote = customNote.trim();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+        updateSingleCard(seats[idx]); }
 
-        function saveAllData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ reservations, positions, activeTimers })); }
-        function loadAllData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    const data = JSON.parse(stored);
-                    reservations = data.reservations || [];
-                    if (data.positions) { positions = {}; for (const k in data.positions) positions[k] = { status: data.positions[k].status || '空闲', reservation: data.positions[k].reservation || null, remark: data.positions[k].remark || '', countdownMinutes: data.positions[k].countdownMinutes || 60, timerMode: data.positions[k].timerMode || '正计时', startTime: data.positions[k].startTime || null, locked: data.positions[k].locked || false }; }
-                    if (data.activeTimers) { activeTimers = {}; for (const k in data.activeTimers) { const t = data.activeTimers[k];
-                            activeTimers[k] = t.running ? { ...t, running: false, paused: false, elapsed: t.elapsed || 0, locked: t.locked || false } : { ...t, running: false, paused: false, locked: t.locked || false }; } }
-                    updatePositionStatuses();
-                } catch (e) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; }
-            }
-        }
-        function saveCompletionRecord(r) { let a = []; const s = localStorage.getItem('yujizaowu_completion'); if (s) a = JSON.parse(s);
-            a.push(r);
-            localStorage.setItem('yujizaowu_completion', JSON.stringify(a)); }
+    function showPaymentModal(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
+        pendingEndSeatId = seatId;
+        selectedPayment = null;
+        $('paymentSeatInfo').textContent = `${seats[idx].name} · 使用时长: ${formatTime(getCurrentSeconds(seats[idx]))}`;
+        document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+        $('confirmPaymentBtn').disabled = true;
+        $('paymentModal').classList.remove('hidden'); }
 
-        // 备注自动保存（失焦时触发）
-        function autoSaveRemark(posName) {
-            const ri = document.getElementById(`remark_${posName}`);
-            if (ri) {
-                const v = ri.value.trim();
-                if (activeTimers[posName]) activeTimers[posName].remark = v;
-                positions[posName].remark = v;
-                saveAllData();
-            }
-        }
+    // 更新总秒数显示
+    function updateTotalSeconds() {
+        const h = parseInt($('customHoursInput').value) || 0;
+        const m = parseInt($('customMinutesInput').value) || 0;
+        const s = parseInt($('customSecondsInput').value) || 0;
+        const total = h * 3600 + m * 60 + s;
+        $('totalSecondsDisplay').textContent = total;
+        return total;
+    }
 
-        // 删除备注按钮
-        function deleteRemark(posName) {
-            const ri = document.getElementById(`remark_${posName}`);
-            if (ri) { ri.value = ''; if (activeTimers[posName]) activeTimers[posName].remark = '';
-                positions[posName].remark = '';
-                saveAllData();
-                alert('备注已清空！'); }
-        }
+    function addReservation() {
+        const name = $('resNameInput').value.trim() || '未填写';
+        const phone = $('resPhoneInput').value.trim();
+        const dateTime = $('resDateTimeInput').value;
+        const seatId = $('resSeatSelect').value ? parseInt($('resSeatSelect').value) : null;
+        const noteSelect = $('resNoteSelect').value;
+        const customNote = $('resCustomNoteInput').value.trim();
+        const remark = customNote || noteSelect;
+        if (!phone) { showToast('⚠️ 请填写电话'); return; }
+        if (!dateTime) { showToast('⚠️ 请选择预约时间'); return; }
+        const resDate = dateTime.split('T')[0];
+        if (seatId) { const existing = reservations.find(r => r.seatId === seatId && r.date === resDate); if (existing) { showToast('⚠️ 该座位在当天已被预约'); return; } }
+        reservations.push({ id: Date.now(), name, phone, dateTime, date: resDate, time: dateTime.split('T')[1] || '', seatId, seatName: seatId ? (seats.find(s => s.id === seatId)?.name || '') : '不指定', remark, status: '已预约' });
+        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
+        renderReservationList();
+        clearReservationForm();
+        showToast('✅ 预约成功 · ' + remark);
+    }
 
-        function openTable(posName) {
-            if (isPositionOccupiedToday(posName)) { alert('已被占用！'); return; }
-            positions[posName].remark = document.getElementById(`remark_${posName}`)?.value.trim() || '';
-            positions[posName].countdownMinutes = parseInt(document.getElementById(`countdown_${posName}`)?.value) || 60;
-            positions[posName].timerMode = document.getElementById(`mode_${posName}`)?.value || '正计时';
-            positions[posName].status = '已开台';
-            positions[posName].startTime = null;
-            positions[posName].locked = false;
-            activeTimers[posName] = { remark: positions[posName].remark, elapsed: 0, mode: positions[posName].timerMode, countdownSeconds: positions[posName].countdownMinutes * 60, running: false, paused: false, startTime: null, locked: false };
-            renderPositionGrid();
-            updateFilterCounts();
-            saveAllData();
-        }
-        function startTimer(posName) {
-            if (!activeTimers[posName]) { alert('请先开台！'); return; }
-            if (activeTimers[posName].running) { alert('已在计时中！'); return; }
-            const now = new Date().toISOString();
-            positions[posName].status = '计时中';
-            positions[posName].startTime = now;
-            positions[posName].locked = true;
-            activeTimers[posName].running = true;
-            activeTimers[posName].paused = false;
-            activeTimers[posName].startTime = now;
-            activeTimers[posName].locked = true;
-            activeTimers[posName].elapsed = activeTimers[posName].mode === '倒计时' ? activeTimers[posName].countdownSeconds : 0;
-            startTimerInterval(posName);
-            renderPositionGrid();
-            updateFilterCounts();
-            saveAllData();
-        }
-        function startTimerInterval(posName) {
-            if (timerIntervals[posName]) clearInterval(timerIntervals[posName]);
-            timerIntervals[posName] = setInterval(() => {
-                const timer = activeTimers[posName];
-                if (!timer || !timer.running || timer.paused) return;
-                if (timer.mode === '正计时') timer.elapsed++;
-                else { timer.elapsed--; if (timer.elapsed <= 0) { timer.elapsed = 0;
-                        timer.running = false;
-                        clearInterval(timerIntervals[posName]);
-                        alert(`${posName}倒计时结束！`); } }
-                updateSingleTimerDisplay(posName);
-            }, 1000);
-        }
-        function pauseTimer(posName) {
-            if (!activeTimers[posName]) { alert('未开台！'); return; }
-            activeTimers[posName].paused = !activeTimers[posName].paused;
-            positions[posName].status = activeTimers[posName].paused ? '已暂停' : '计时中';
-            if (!activeTimers[posName].paused) { positions[posName].startTime = new Date().toISOString();
-                activeTimers[posName].startTime = positions[posName].startTime; }
-            renderPositionGrid();
-            updateFilterCounts();
-            saveAllData();
-        }
-        function endTimer(posName) { if (!activeTimers[posName]) { alert('未开台！'); return; }
-            showPaymentConfirm(posName); }
-        function updateSingleTimerDisplay(posName) { const d = document.getElementById(`timer_${posName}`); if (d && activeTimers[posName]) d.textContent = formatTime(Math.abs(activeTimers[posName].elapsed)); }
-        function updateAllTimers() { for (const k in activeTimers) updateSingleTimerDisplay(k); }
+    function clearReservationForm() { $('resNameInput').value = '';
+        $('resPhoneInput').value = '';
+        $('resDateTimeInput').value = new Date().toISOString().slice(0, 16);
+        $('resSeatSelect').value = '';
+        $('resNoteSelect').value = '抖音';
+        $('resCustomNoteInput').value = ''; }
+    function deleteReservation(id) { if (!confirm('确定删除此预约？')) return;
+        reservations = reservations.filter(r => r.id !== id);
+        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
+        renderReservationList();
+        showToast('🗑️ 预约已删除'); }
 
-        function closeAllTables() {
-            const bp = []; for (const k in positions) { if (positions[k].status === '计时中' || positions[k].status === '已开台' || positions[k].status === '已暂停') bp.push(k); } if (!bp.length) { alert('没有正在使用的座位！'); return; }
-            showDeleteConfirm(`确定一键关店？\n将结束 ${bp.length} 个座位`, function() { bp.forEach(k => { if (timerIntervals[k]) { clearInterval(timerIntervals[k]);
-                        delete timerIntervals[k]; } if (activeTimers[k]) { saveCompletionRecord({ position: k, time: new Date().toISOString(), duration: formatTime(Math.abs(activeTimers[k].elapsed)), remark: activeTimers[k].remark || '一键关店', payment: '一键关店', mode: activeTimers[k].mode });
-                        delete activeTimers[k]; }
-                    positions[k].status = '空闲';
-                    positions[k].reservation = null;
-                    positions[k].remark = '';
-                    positions[k].startTime = null;
-                    positions[k].locked = false; });
-                updatePositionStatuses();
-                renderPositionGrid();
-                updateFilterCounts();
-                saveAllData();
-                alert(`一键关店完成！关闭 ${bp.length} 个座位`); });
-        }
+    function renderReservationList() { const c = $('reservationList'); if (!reservations.length) { c.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">暂无预约</div>'; return; } const g = {};
+        reservations.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        reservations.forEach(r => { if (!g[r.date]) g[r.date] = [];
+            g[r.date].push(r); }); let h = ''; for (const d in g) { h += `<div style="font-weight:bold;margin:12px 0 6px;color:#5e4b3c;">📅 ${d} (${g[d].length}个)</div>`;
+            g[d].forEach(r => { h += `<div class="reservation-item"><div class="info"><div>⏰ ${r.time||''} | 👤 ${r.name} | 📞 ${r.phone}</div><div>📍 ${r.seatName} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c;" onclick="deleteReservation(${r.id})">删除</button></div>`; }); }
+        c.innerHTML = h; }
+    function updateSeatSelect() { $('resSeatSelect').innerHTML = '<option value="">不指定座位</option>' + seats.map(s => `<option value="${s.id}">${s.name}</option>`).join(''); }
 
-        function init() {
-            loadAllData();
-            if (!Object.keys(positions).length) { for (let i = 1; i <= 36; i++) positions[`座位${i}`] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false }; }
-            document.getElementById('resDateTime').value = new Date().toISOString().slice(0, 16);
-            updatePositionStatuses();
-            updatePositionSelects();
-            renderPositionGrid();
-            refreshReservationList();
-            updateFilterCounts();
-            setInterval(updateAllTimers, 1000);
-            window.addEventListener('beforeunload', saveAllData);
-            setInterval(saveAllData, 5000);
-            document.querySelectorAll('.filter-btn').forEach(btn => { btn.addEventListener('click', function() { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentFilter = this.dataset.filter;
-                    renderPositionGrid(); }); });
-            document.getElementById('deleteConfirmOkBtn').addEventListener('click', function() { if (deleteCallback) { deleteCallback();
-                    deleteCallback = null; } document.getElementById('deleteConfirmOverlay').style.display = 'none'; });
-            document.getElementById('paymentConfirmBtn').addEventListener('click', function() {
-                if (!selectedPayment) { alert('请选择支付方式！'); return; }
-                const p = endingPosition;
-                if (timerIntervals[p]) { clearInterval(timerIntervals[p]);
-                    delete timerIntervals[p]; }
-                const elapsed = activeTimers[p] ? activeTimers[p].elapsed : 0;
-                if (activeTimers[p]) { saveCompletionRecord({ position: p, time: new Date().toISOString(), duration: formatTime(Math.abs(elapsed)), remark: activeTimers[p].remark, payment: selectedPayment, mode: activeTimers[p].mode });
-                    delete activeTimers[p]; }
-                positions[p].status = '空闲';
-                positions[p].reservation = null;
-                positions[p].remark = '';
-                positions[p].startTime = null;
-                positions[p].locked = false;
-                closePaymentConfirm();
-                updatePositionStatuses();
-                renderPositionGrid();
-                updateFilterCounts();
-                saveAllData();
-                alert(`${p}已结束！`);
-            });
-        }
-        function updatePositionStatuses() { const today = getTodayStr(); for (const k in positions) { if (positions[k].status === '计时中' || positions[k].status === '已开台' || positions[k].status === '已暂停') continue; let f = false; for (const r of reservations) { if (r.position === k && getReservationDate(r) === today) { f = true;
-                        positions[k].status = '已预约';
-                        positions[k].reservation = r; break; } } if (!f) { positions[k].status = '空闲';
-                    positions[k].reservation = null; } } }
-        function switchTab(t) { document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); if (t === 'reservation') { document.querySelectorAll('.tab-button')[0].classList.add('active');
-                document.getElementById('reservationTab').classList.add('active');
-                refreshReservationList(); } else { document.querySelectorAll('.tab-button')[1].classList.add('active');
-                document.getElementById('timerTab').classList.add('active');
-                updatePositionSelects();
-                renderPositionGrid();
-                updateFilterCounts(); } }
-        function addNewPosition() { const n = document.getElementById('newPositionName').value.trim(); if (!n) { alert('请输入名称！'); return; } if (positions[n]) { alert('已存在！'); return; }
-            positions[n] = { status: '空闲', reservation: null, remark: '', countdownMinutes: 60, timerMode: '正计时', startTime: null, locked: false };
-            document.getElementById('newPositionName').value = '';
-            updatePositionSelects();
-            renderPositionGrid();
-            updateFilterCounts();
-            saveAllData(); }
-        function deletePosition(posName) { if (activeTimers[posName]) { alert('使用中！'); return; } if (isPositionOccupiedToday(posName)) { alert('今天已被占用！'); return; } for (const r of reservations) { if (r.position === posName && getReservationDate(r) >= getTodayStr()) { alert('有未来预约！'); return; } }
-            showDeleteConfirm(`确定删除"${posName}"？`, function() { delete positions[posName];
-                updatePositionSelects();
-                renderPositionGrid();
-                updateFilterCounts();
-                saveAllData(); }); }
-        function updatePositionSelects() { const s = document.getElementById('resPosition'); const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')),
-                nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
-            s.innerHTML = '<option value="不指定">不指定位置</option>';
-            names.forEach(n => { const o = document.createElement('option');
-                o.value = n;
-                o.textContent = n;
-                s.appendChild(o); }); }
-        function addReservation() { const name = document.getElementById('resName').value.trim() || '未填写'; const phone = document.getElementById('resPhone').value.trim(); const dt = document.getElementById('resDateTime').value;
-            const pos = document.getElementById('resPosition').value; const remarkSelect = document.getElementById('resRemark').value; const customRemark = document.getElementById('resCustomRemark').value.trim(); const remark = remarkSelect === '自定义' ? (customRemark || '自定义') : remarkSelect; if (!phone) { alert('电话不能为空！'); return; } if (!dt) { alert('请选择时间！'); return; } const resDate = dt.split('T')[0]; if (pos !== '不指定') { if (!positions[pos]) { alert('位置不存在！'); return; } for (const r of reservations) { if (r.position === pos && getReservationDate(r) === resDate) { alert(`${pos}在${resDate}已被预约！`); return; } } if (resDate === getTodayStr() && isPositionOccupiedToday(pos)) { alert(`${pos}今天已被占用！`); return; } }
-            reservations.push({ id: Date.now(), name, phone, time: dt, position: pos, remark, status: '已预约' });
-            updatePositionStatuses();
-            refreshReservationList();
-            updatePositionSelects();
-            renderPositionGrid();
-            updateFilterCounts();
-            saveAllData();
-            alert('预约成功！');
-            clearForm(); }
-        function clearForm() { document.getElementById('resName').value = '';
-            document.getElementById('resPhone').value = '';
-            document.getElementById('resPosition').value = '不指定';
-            document.getElementById('resRemark').value = '美团';
-            document.getElementById('resCustomRemark').value = '';
-            document.getElementById('resCustomRemark').classList.remove('show');
-            document.getElementById('resDateTime').value = new Date().toISOString().slice(0, 16); }
-        function deleteReservation(id) { const r = reservations.find(x => x.id === id); const msg = r ? `确定删除此预约？\n\n👤 ${r.name}\n📞 ${r.phone}\n📅 ${r.time}\n📍 ${r.position}` : '确定删除？';
-            showDeleteConfirm(msg, function() { reservations = reservations.filter(x => x.id !== id);
-                updatePositionStatuses();
-                refreshReservationList();
-                renderPositionGrid();
-                updateFilterCounts();
-                saveAllData(); }); }
-        function refreshReservationList() { const c = document.getElementById('reservationListContent'); if (!reservations.length) { c.innerHTML = '<div style="text-align:center;color:#999;padding:50px;">暂无预约记录</div>'; return; } const g = {};
-            reservations.sort((a, b) => new Date(a.time) - new Date(b.time));
-            reservations.forEach(r => { const d = getReservationDate(r); if (!g[d]) g[d] = [];
-                g[d].push(r); }); let h = ''; for (const d in g) { h += `<div class="reservation-date-group"><div class="date-header">📅 ${d} (${g[d].length}个)</div>`;
-                g[d].forEach(r => { const t = r.time.split('T')[1] || '';
-                    h += `<div class="reservation-item"><div class="reservation-info"><div>⏰ <strong>${t}</strong></div><div>👤 <strong>${r.name}</strong> | 📞 ${r.phone}</div><div>📍 ${r.position} | <span class="badge ${getBadgeClass(r.remark)}">${r.remark}</span></div></div><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteReservation(${r.id})">删除</button></div>`; });
-                h += '</div>'; }
-            c.innerHTML = h; }
-        function updateModeInputs(posName) { const ms = document.getElementById(`mode_${posName}`),
-                ci = document.getElementById(`countdown_${posName}`); if (ms && ci) { const locked = isTimerLocked(posName);
-                ms.disabled = locked;
-                ci.disabled = locked || ms.value !== '倒计时';
-                ci.style.background = ci.disabled ? '#f5f5f5' : 'white';
-                ci.style.color = ci.disabled ? '#ccc' : '#333'; } }
-        function updateFilterCounts() { let free = 0,
-                busy = 0,
-                reserved = 0; for (const k in positions) { const fs = getFilterStatus(k); if (fs === '空闲') free++; else if (fs === '使用中') busy++; else reserved++; }
-            document.getElementById('countAll').textContent = `(${free+busy+reserved})`;
-            document.getElementById('countFree').textContent = `(${free})`;
-            document.getElementById('countBusy').textContent = `(${busy})`;
-            document.getElementById('countReserved').textContent = `(${reserved})`; }
-        function renderPositionGrid() {
-            const g = document.getElementById('positionGrid');
-            let h = '',
-                count = 0;
-            const names = Object.keys(positions).sort((a, b) => { const na = parseInt(a.replace('座位', '')),
-                    nb = parseInt(b.replace('座位', '')); if (!isNaN(na) && !isNaN(nb)) return na - nb; return a.localeCompare(b, 'zh'); });
-            names.forEach(posName => {
-                const fs = getFilterStatus(posName);
-                if (currentFilter === '空闲' && fs !== '空闲') return;
-                if (currentFilter === '使用中' && fs !== '使用中') return;
-                if (currentFilter === '已预约' && fs !== '已预约') return;
-                if (searchKeyword && !posName.includes(searchKeyword)) return;
-                count++;
-                const d = positions[posName],
-                    s = d.status;
-                const ga = s === '空闲' ? 'active' : '',
-                    ya = s === '已开台' ? 'active' : '',
-                    ra = s === '计时中' ? 'active' : '',
-                    ba = s === '已暂停' ? 'active' : '';
-                const st = { '空闲': '空闲', '已开台': '已开台', '计时中': '计时中', '已暂停': '已暂停', '已预约': '已预约' } [s] || '空闲';
-                const tv = activeTimers[posName] ? formatTime(Math.abs(activeTimers[posName].elapsed)) : '00:00:00';
-                const rv = activeTimers[posName] ? activeTimers[posName].remark : (d.remark || '');
-                const cv = d.countdownMinutes || 60,
-                    mv = d.timerMode || '正计时';
-                const locked = isTimerLocked(posName) || s === '已开台';
-                const hl = searchKeyword && posName.includes(searchKeyword) ? ' highlight' : '';
-                const stStr = (activeTimers[posName] && activeTimers[posName].startTime) ? formatStartTime(activeTimers[posName].startTime) : (d.startTime ? formatStartTime(d.startTime) : '');
-                h += `<div class="position-card${hl}"><button class="delete-position-btn" onclick="event.stopPropagation();deletePosition('${posName}')">×</button><div class="position-header"><span class="position-name">${posName}</span><div class="status-lights"><div class="status-light light-green ${ga}"></div><div class="status-light light-yellow ${ya}"></div><div class="status-light light-red ${ra}"></div><div class="status-light light-blue ${ba}"></div></div></div><div style="font-size:10px;color:#999;margin-bottom:4px;">${st}</div>${stStr?`<div class="position-start-time">${stStr}</div>`:''}<div class="position-timer-display" id="timer_${posName}">${tv}</div><div class="position-info-item"><label>备注</label><div class="remark-row"><input class="position-remark-input" id="remark_${posName}" value="${rv.replace(/"/g,'&quot;')}" onblur="autoSaveRemark('${posName}')"><button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteRemark('${posName}')">删除</button></div></div><div class="position-info-item"><label>计时模式</label><select class="position-mode-select" id="mode_${posName}" onchange="updateModeInputs('${posName}')" ${locked?'disabled':''}><option value="正计时" ${mv==='正计时'?'selected':''}>正计时</option><option value="倒计时" ${mv==='倒计时'?'selected':''}>倒计时</option></select></div><div class="position-info-item"><label>倒计时(分钟)</label><input type="number" class="position-countdown-input" id="countdown_${posName}" value="${cv}" min="1" ${locked?'disabled':(mv==='正计时'?'disabled':'')}></div><div class="position-controls"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openTable('${posName}')">开台</button><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();startTimer('${posName}')">开始</button><button class="btn btn-warning btn-sm" onclick="event.stopPropagation();pauseTimer('${posName}')">暂停</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();endTimer('${posName}')">结束</button></div></div>`;
-            });
-            if (count === 0) h = '<div class="no-result">未找到匹配的座位</div>';
-            g.innerHTML = h;
-        }
-        function exportReservationsExcel() { if (!reservations.length) { alert('无数据！'); return; } const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['预约时间','姓名','电话','位置','备注','状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])]), '预约记录');
-            XLSX.writeFile(wb, `与己造物_预约_${getTodayStr()}.xlsx`); }
-        function exportAllExcel() { const wb = XLSX.utils.book_new(); if (reservations.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['预约时间','姓名','电话','位置','备注','状态'], ...reservations.map(r => [r.time, r.name, r.phone, r.position, r.remark, r.status])]), '预约记录'); const s = localStorage.getItem('yujizaowu_completion'); if (s) { const a = JSON.parse(s); if (a.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['结束时间','位置','计时时长','备注','支付方式'], ...a.map(r => [new Date(r.time).toLocaleString(), r.position, r.duration, r.remark, r.payment])]), '完成记录'); } if (!wb.SheetNames.length) { alert('无数据！'); return; }
-            XLSX.writeFile(wb, `与己造物_全部_${getTodayStr()}.xlsx`); }
+    function updateSingleCard(seat) { const card = document.querySelector(`.seat-card[data-seat-id="${seat.id}"]`); if (!card) return renderAdminGrid(); const sc = seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : (seat.status === 'paused' ? 'status-paused' : 'status-idle'); const st = seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '暂停');
+        card.querySelector('.timer-display').textContent = getTimerText(seat);
+        card.querySelector('.seat-status').textContent = st;
+        card.querySelector('.seat-status').className = 'seat-status ' + sc; }
 
-        window.onload = init;
-    </script>
+    function renderAdminGrid() { let h = '';
+        seats.forEach(seat => { const sc = seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : (seat.status === 'paused' ? 'status-paused' : 'status-idle'); const st = seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '暂停'); const dn = getDisplayNote(seat); const opts = PRESET_NOTES.map(o => `<option value="${o}" ${seat.notes===o?'selected':''}>${o||'无备注'}</option>`).join('');
+            h += `<div class="seat-card" data-seat-id="${seat.id}"><div class="seat-header"><span class="seat-name">${seat.name}</span><span class="seat-status ${sc}">${st}</span></div><div class="mode-badge">${seat.timerMode==='countdown'?'倒计时':'正计时'}</div><div class="timer-display" id="timer-${seat.id}">${getTimerText(seat)}</div><div class="seat-actions"><button class="btn btn-sm" data-action="start" data-id="${seat.id}">开始</button><button class="btn btn-sm" data-action="pause" data-id="${seat.id}">暂停</button><button class="btn btn-sm" data-action="end" data-id="${seat.id}">结束</button><button class="btn btn-sm" data-action="reset" data-id="${seat.id}">重置</button></div><div class="seat-actions"><button class="btn btn-sm" data-action="openTable" data-id="${seat.id}">开台</button><button class="btn btn-sm" data-action="toggleMode" data-id="${seat.id}">切换</button><button class="btn btn-sm btn-primary" data-action="customCountdown" data-id="${seat.id}">倒计时</button></div><div class="notes-selector-wrapper"><div class="remark-row"><select class="notes-preset" data-id="${seat.id}">${opts}</select><input type="text" class="notes-custom" data-id="${seat.id}" placeholder="或直接输入" value="${(seat.customNote||'').replace(/"/g,'&quot;')}"><button class="btn btn-sm" data-action="saveNote" data-id="${seat.id}" style="flex:0 0 auto;padding:4px 8px;font-size:0.6rem;">保存</button></div>${dn?`<div class="current-note-display">📋 ${dn}</div>`:''}</div></div>`; });
+        $('seatsContainer').innerHTML = h;
+        updateStats();
+        $('seatCountDisplay').textContent = seats.length;
+        updateSeatSelect(); }
+    function updateStats() { $('statAll').textContent = seats.length;
+        $('statActive').textContent = seats.filter(s => s.status==='active'||s.status==='paused').length;
+        $('statIdle').textContent = seats.filter(s => s.status==='idle').length; }
+    function applyFilter() { document.querySelectorAll('.seat-card').forEach(card => { const s = seats.find(x => x.id===parseInt(card.dataset.seatId)); if(!s) return; let show = true; if(currentFilter==='active') show = s.status==='active'||s.status==='paused'; else if(currentFilter==='idle') show = s.status==='idle';
+            card.classList.toggle('hidden', !show); }); }
+    function showRecords(ds) { const d = ds || new Date().toISOString().split('T')[0];
+        $('recordDateInput').value = d; const recs = usageRecords.filter(r => r.timestamp.startsWith(d));
+        $('recordsList').innerHTML = recs.length ? recs.map(r => `<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''} · ${r.notes||''}</span></div>`).join('') : '<div style="text-align:center;padding:20px;">暂无记录</div>'; }
+    function exportToExcel(ds) { const d = ds || new Date().toISOString().split('T')[0]; const data = [['座位','时长','收款方式','备注','时间']];
+        usageRecords.filter(r => r.timestamp.startsWith(d)).forEach(r => data.push([r.seatName, r.duration, r.paymentMethod||'', r.notes||'', new Date(r.timestamp).toLocaleString()])); const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '记录');
+        XLSX.writeFile(wb, `记录_${d}.xlsx`);
+        showToast('✅ 导出成功'); }
+    function exportReservationsExcel() { if (!reservations.length) { showToast('无预约记录'); return; } const data = [['预约时间','姓名','电话','座位','备注','状态']];
+        reservations.forEach(r => data.push([r.dateTime, r.name, r.phone, r.seatName, r.remark, r.status])); const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '预约');
+        XLSX.writeFile(wb, `预约_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showToast('✅ 导出成功'); }
+
+    function setupEvents() {
+        $('seatsContainer').onclick = e => { const btn = e.target.closest('[data-action]'); if (!btn) return; const a = btn.dataset.action,
+                id = parseInt(btn.dataset.id); if (a==='start') actionStart(id); else if (a==='pause') actionPause(id); else if (a==='end') showPaymentModal(id); else if (a==='reset') actionReset(id); else if (a==='openTable') actionOpenTable(id); else if (a==='toggleMode') actionToggleMode(id); else if (a==='customCountdown') { pendingCustomSeatId = id;
+                $('customHoursInput').value = '1';
+                $('customMinutesInput').value = '0';
+                $('customSecondsInput').value = '0';
+                updateTotalSeconds();
+                $('customTimeModal').classList.remove('hidden'); } else if (a==='saveNote') { const pe = document.querySelector(`.notes-preset[data-id="${id}"]`); const ce = document.querySelector(`.notes-custom[data-id="${id}"]`); if (pe && ce) saveSeatNote(id, pe.value, ce.value); } };
+        $('customHoursInput').oninput = updateTotalSeconds;
+        $('customMinutesInput').oninput = updateTotalSeconds;
+        $('customSecondsInput').oninput = updateTotalSeconds;
+        document.querySelectorAll('.stat-card').forEach(c => c.onclick = () => { currentFilter = c.dataset.filter;
+            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
+            c.classList.add('active');
+            applyFilter(); });
+        document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            $(b.dataset.tab==='timer'?'tabTimer':'tabReservation').classList.add('active'); });
+        document.querySelectorAll('.payment-option').forEach(o => { o.onclick = () => { document.querySelectorAll('.payment-option').forEach(x => x.classList.remove('selected'));
+                o.classList.add('selected');
+                selectedPayment = o.dataset.payment;
+                $('confirmPaymentBtn').disabled = false; }; });
+        $('confirmPaymentBtn').onclick = () => { if (pendingEndSeatId && selectedPayment) { actionEndWithPayment(pendingEndSeatId, selectedPayment);
+                $('paymentModal').classList.add('hidden'); } };
+        $('cancelPaymentBtn').onclick = () => { $('paymentModal').classList.add('hidden');
+            pendingEndSeatId = null;
+            selectedPayment = null; };
+        $('addSeatBtn').onclick = () => { seats.push(createDefaultSeat(Math.max(...seats.map(s=>s.id))+1));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+            renderAdminGrid(); };
+        $('resetAllIdleBtn').onclick = () => { seats.forEach(s => { stopRunning(s);
+                s.status='idle';
+                s.accumulatedSeconds=0; });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+            renderAdminGrid(); };
+        $('viewRecordsBtn').onclick = () => { showRecords(new Date().toISOString().split('T')[0]);
+            $('recordsModal').classList.remove('hidden'); };
+        $('closeRecordsBtn').onclick = () => $('recordsModal').classList.add('hidden');
+        $('loadRecordsBtn').onclick = () => { if ($('recordDateInput').value) showRecords($('recordDateInput').value); };
+        $('exportRecordsBtn').onclick = () => exportToExcel(new Date().toISOString().split('T')[0]);
+        $('exportDayRecordsBtn').onclick = () => exportToExcel($('recordDateInput').value);
+        $('cancelCustomBtn').onclick = () => $('customTimeModal').classList.add('hidden');
+        $('confirmCustomBtn').onclick = () => { const totalSeconds = updateTotalSeconds(); if (totalSeconds > 0 && pendingCustomSeatId) { const idx = getSeatIndex(pendingCustomSeatId); if(idx!==-1){ stopRunning(seats[idx]);
+                    seats[idx].countdownInitial = totalSeconds;
+                    seats[idx].timerMode = 'countdown';
+                    seats[idx].accumulatedSeconds = 0;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                    renderAdminGrid();
+                    showToast(`⏱️ 倒计时已设为 ${formatTime(totalSeconds)}`); } } $('customTimeModal').classList.add('hidden'); };
+        $('addReservationBtn').onclick = addReservation;
+        $('clearResFormBtn').onclick = clearReservationForm;
+        $('exportReservationsBtn').onclick = exportReservationsExcel;
+        document.querySelectorAll('.modal-overlay').forEach(m => m.onclick = e => { if (e.target===m) m.classList.add('hidden'); });
+        window.deleteReservation = deleteReservation;
+    }
+
+    loadSeats();
+    loadRecords();
+    loadReservations();
+    renderAdminGrid();
+    renderReservationList();
+    updateSeatSelect();
+    setupEvents();
+    $('resDateTimeInput').value = new Date().toISOString().slice(0, 16);
+
+    globalTimer = setInterval(() => { seats.forEach(s => { const el = $(`timer-${s.id}`); if(el) el.textContent = getTimerText(s); if(s.timerMode==='countdown' && s.running && s.countdownInitial-getCurrentSeconds(s)<=0){ s.running=false;
+                s.accumulatedSeconds=s.countdownInitial;
+                s.status='paused';
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+                renderAdminGrid(); } });
+        updateStats(); }, 200);
+    setInterval(() => { seats.forEach(s => { if(s.running) s.accumulatedSeconds = getCurrentSeconds(s); });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }, 3000);
+    window.addEventListener('beforeunload', () => { seats.forEach(s => { if(s.running) { s.accumulatedSeconds = getCurrentSeconds(s);
+                s.startTimestamp = Date.now(); } });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); });
+})();
+</script>
 </body>
 </html>
