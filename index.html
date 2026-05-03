@@ -74,6 +74,8 @@
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .time-input-group { display: flex; gap: 8px; align-items: center; }
         .time-input-group input { width: 60px; text-align: center; }
+        .transfer-btn { background: #8b6f5c !important; border-color: #6b5343 !important; color: #fff !important; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -114,17 +116,32 @@
             <div class="reservation-list"><h3 style="margin-bottom:14px;">预约列表 <button class="btn btn-sm btn-success" id="exportReservationsBtn" style="float:right;">导出</button></h3><div id="reservationList"></div></div>
         </div>
     </div>
+    <!-- 转桌模态框 -->
+    <div id="transferModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>🔄 转桌 - 选择目标座位</h3>
+            <div id="transferInfo" style="margin-bottom:12px;color:#5f4e43;font-size:0.8rem;"></div>
+            <div class="modal-input-group">
+                <label>目标座位</label>
+                <select id="transferTargetSelect"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="cancelTransferBtn">取消</button>
+                <button class="btn btn-primary" id="confirmTransferBtn">确认转桌</button>
+            </div>
+        </div>
+    </div>
     <div id="customTimeModal" class="modal-overlay hidden"><div class="modal"><h3>⏱️ 设置倒计时</h3><div class="modal-input-group"><div class="time-input-group"><input type="number" id="customHoursInput" min="0" value="1"><span>时</span><input type="number" id="customMinutesInput" min="0" max="59" value="0"><span>分</span><input type="number" id="customSecondsInput" min="0" max="59" value="0"><span>秒</span></div><div style="margin-top:8px;font-size:0.7rem;color:#999;">总秒数：<span id="totalSecondsDisplay">3600</span> 秒</div></div><div class="modal-actions"><button class="btn" id="cancelCustomBtn">取消</button><button class="btn btn-primary" id="confirmCustomBtn">确定</button></div></div></div>
     <div id="paymentModal" class="modal-overlay hidden"><div class="modal"><h3>💰 选择收款方式</h3><div id="paymentSeatInfo" style="margin-bottom:12px;color:#5f4e43;"></div><div class="payment-methods" id="paymentOptionsContainer"></div><div class="payment-hint">👆 请选择一种收款方式</div><div class="modal-actions"><button class="btn" id="cancelPaymentBtn">取消</button><button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button></div></div></div>
     <div id="recordsModal" class="modal-overlay hidden"><div class="modal"><h3>每日使用记录</h3><div style="display:flex;gap:8px;margin:16px 0;"><input type="date" id="recordDateInput" style="flex:1;padding:8px;border-radius:20px;border:1px solid #d6c9bf;"><button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button></div><div class="records-list" id="recordsList"></div><div class="modal-actions"><button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button><button class="btn btn-sm" id="closeRecordsBtn">关闭</button></div></div></div>
 </div>
 <script>
 (function(){
-    const STORAGE_KEY='yzw_v25',RECORDS_KEY='yzw_rec25',RESERVATIONS_KEY='yzw_res25';
+    const STORAGE_KEY='yzw_v26',RECORDS_KEY='yzw_rec26',RESERVATIONS_KEY='yzw_res26';
     const PAYMENT_METHODS=[{name:'抖音团购',icon:'🎵'},{name:'快手团购',icon:'📱'},{name:'美团团购',icon:'🍔'},{name:'支付宝',icon:'💙'},{name:'微信',icon:'💚'}];
     const PRESET_NOTES=['','抖音','美团','快手','小红书'];
     let seats=[],usageRecords=[],reservations=[],displayTimer=null,saveTimer=null;
-    let pendingCustomSeatId=null,pendingEndSeatId=null,selectedPayment=null,currentFilter='all';
+    let pendingCustomSeatId=null,pendingEndSeatId=null,pendingTransferSeatId=null,selectedPayment=null,currentFilter='all';
     const $=id=>document.getElementById(id);
     const toastEl=$('toast');
     function showToast(m,d=1500){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),d);}
@@ -145,39 +162,72 @@
     function setCountdown(id,totalSec){const s=seats.find(x=>x.id===id);if(!s)return;if(isLocked(s)){showToast('⚠️ 计时中无法操作');return;}pauseSeat(s);s.countdownInitial=totalSec;s.timerMode='countdown';s.accumulatedSeconds=0;s.startTimeStr='';save();renderGrid();}
     function addSeat(){const maxId=seats.reduce((max,s)=>Math.max(max,s.id),0);seats.push(createSeat(maxId+1,(maxId+1)+'号桌'));save();renderGrid();}
     function deleteSeat(id){const s=seats.find(x=>x.id===id);if(!s)return;if(s.status!=='idle'){showToast('⚠️ 请先结束');return;}if(!confirm(`删除 ${s.name}？`))return;seats=seats.filter(x=>x.id!==id);save();renderGrid();}
+
+    // 转桌功能
+    function showTransferModal(id){
+        const s=seats.find(x=>x.id===id);
+        if(!s)return;
+        if(!isLocked(s)){showToast('⚠️ 只有计时中或暂停中才能转桌');return;}
+        pendingTransferSeatId=id;
+        $('transferInfo').textContent=`${s.name} · ${fmtTime(getDisplayTime(s))} · 备注: ${s.customNote||s.notes||'无'}`;
+        const select=$('transferTargetSelect');
+        select.innerHTML=seats.filter(x=>x.id!==id&&x.status==='idle').map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
+        if(!select.options.length){showToast('⚠️ 没有空闲座位可转');return;}
+        $('transferModal').classList.remove('hidden');
+    }
+    function confirmTransfer(){
+        if(!pendingTransferSeatId)return;
+        const sourceSeat=seats.find(x=>x.id===pendingTransferSeatId);
+        const targetId=parseInt($('transferTargetSelect').value);
+        const targetSeat=seats.find(x=>x.id===targetId);
+        if(!sourceSeat||!targetSeat){showToast('⚠️ 操作失败');return;}
+        if(targetSeat.status!=='idle'){showToast('⚠️ 目标座位非空闲');return;}
+
+        // 保存源座位数据
+        const savedData={
+            status:sourceSeat.status,
+            timerMode:sourceSeat.timerMode,
+            countdownInitial:sourceSeat.countdownInitial,
+            accumulatedSeconds:sourceSeat.accumulatedSeconds,
+            running:sourceSeat.running,
+            startTimestamp:sourceSeat.startTimestamp,
+            startTimeStr:sourceSeat.startTimeStr,
+            notes:sourceSeat.notes,
+            customNote:sourceSeat.customNote
+        };
+
+        // 清空源座位
+        sourceSeat.status='idle';
+        sourceSeat.accumulatedSeconds=0;
+        sourceSeat.running=false;
+        sourceSeat.startTimestamp=null;
+        sourceSeat.startTimeStr='';
+        sourceSeat.notes='';
+        sourceSeat.customNote='';
+
+        // 复制到目标座位
+        Object.assign(targetSeat,savedData);
+        targetSeat.id=targetId;
+        targetSeat.name=targetSeat.name;
+
+        save();
+        $('transferModal').classList.add('hidden');
+        pendingTransferSeatId=null;
+        renderGrid();
+        showToast(`✅ 已从${sourceSeat.name}转至${targetSeat.name}`);
+    }
+
     function autoSaveNoteSelect(seatId,value){const s=seats.find(x=>x.id===seatId);if(!s)return;s.notes=value;if(value!=='')s.customNote='';save();}
     function autoSaveNoteInput(seatId,value){const s=seats.find(x=>x.id===seatId);if(!s)return;s.customNote=value.trim();if(s.customNote)s.notes='';save();}
     function renderPaymentOptions(){const c=$('paymentOptionsContainer');if(!c)return;c.innerHTML=PAYMENT_METHODS.map(m=>`<div class="payment-option" data-payment="${m.name}"><div class="payment-icon">${m.icon}</div><div class="payment-name">${m.name}</div></div>`).join('');c.querySelectorAll('.payment-option').forEach(o=>{o.onclick=function(){c.querySelectorAll('.payment-option').forEach(x=>x.classList.remove('selected'));this.classList.add('selected');selectedPayment=this.dataset.payment;$('confirmPaymentBtn').disabled=false;};});}
-    function renderGrid(){let h='';seats.forEach(s=>{const locked=isLocked(s);const sc=s.status==='active'?(s.running?'status-active':'status-paused'):(s.status==='paused'?'status-paused':'status-idle');const st=s.status==='idle'?'空闲':(s.running?'计时中':'暂停');const dn=s.customNote||s.notes||'';const opts=PRESET_NOTES.map(o=>`<option value="${o}" ${s.notes===o?'selected':''}>${o||'无备注'}</option>`).join('');const showST=(s.running||s.status==='paused')&&s.startTimeStr;const stHtml=showST?`<div class="start-time-label">🕐 ${s.startTimeStr}</div>`:'';const dis=locked?'disabled':'';h+=`<div class="seat-card" data-seat-id="${s.id}"><button class="delete-seat-btn" onclick="event.stopPropagation();deleteSeat(${s.id})">×</button><div class="seat-header"><span class="seat-name">${s.name}</span><span class="seat-status ${sc}">${st}</span></div><div class="mode-badge">${s.timerMode==='countdown'?'倒计时':'正计时'}</div>${stHtml}<div class="timer-display" id="timer-${s.id}">${fmtTime(getDisplayTime(s))}</div><div class="seat-actions"><button class="btn btn-sm" data-act="start" data-id="${s.id}">开始</button><button class="btn btn-sm" data-act="pause" data-id="${s.id}">暂停</button><button class="btn btn-sm" data-act="end" data-id="${s.id}">结束</button></div><div class="seat-actions"><button class="btn btn-sm" data-act="open" data-id="${s.id}" ${dis}>开台</button><button class="btn btn-sm" data-act="toggle" data-id="${s.id}" ${dis}>切换</button><button class="btn btn-sm btn-primary" data-act="cdown" data-id="${s.id}" ${dis}>倒计时</button></div><div class="notes-selector-wrapper"><div class="remark-row"><select class="np" data-id="${s.id}" onchange="autoSaveNoteSelect(${s.id},this.value)">${opts}</select><input type="text" class="nc" data-id="${s.id}" placeholder="自定义备注" value="${(s.customNote||'').replace(/"/g,'&quot;')}" onblur="autoSaveNoteInput(${s.id},this.value)"></div>${dn?`<div class="current-note-display">📋 ${dn}</div>`:''}</div></div>`;});$('seatsContainer').innerHTML=h;updateStats();updateSeatSelect();}
+    function renderGrid(){let h='';seats.forEach(s=>{const locked=isLocked(s);const sc=s.status==='active'?(s.running?'status-active':'status-paused'):(s.status==='paused'?'status-paused':'status-idle');const st=s.status==='idle'?'空闲':(s.running?'计时中':'暂停');const dn=s.customNote||s.notes||'';const opts=PRESET_NOTES.map(o=>`<option value="${o}" ${s.notes===o?'selected':''}>${o||'无备注'}</option>`).join('');const showST=(s.running||s.status==='paused')&&s.startTimeStr;const stHtml=showST?`<div class="start-time-label">🕐 ${s.startTimeStr}</div>`:'';const dis=locked?'disabled':'';h+=`<div class="seat-card" data-seat-id="${s.id}"><button class="delete-seat-btn" onclick="event.stopPropagation();deleteSeat(${s.id})">×</button><div class="seat-header"><span class="seat-name">${s.name}</span><span class="seat-status ${sc}">${st}</span></div><div class="mode-badge">${s.timerMode==='countdown'?'倒计时':'正计时'}</div>${stHtml}<div class="timer-display" id="timer-${s.id}">${fmtTime(getDisplayTime(s))}</div><div class="seat-actions"><button class="btn btn-sm" data-act="start" data-id="${s.id}">开始</button><button class="btn btn-sm" data-act="pause" data-id="${s.id}">暂停</button><button class="btn btn-sm" data-act="end" data-id="${s.id}">结束</button></div><div class="seat-actions"><button class="btn btn-sm" data-act="open" data-id="${s.id}" ${dis}>开台</button><button class="btn btn-sm" data-act="toggle" data-id="${s.id}" ${dis}>切换</button><button class="btn btn-sm btn-primary" data-act="cdown" data-id="${s.id}" ${dis}>倒计时</button></div><div class="seat-actions"><button class="btn btn-sm transfer-btn" data-act="transfer" data-id="${s.id}" ${!locked?'disabled':''}>🔄 转桌</button></div><div class="notes-selector-wrapper"><div class="remark-row"><select class="np" data-id="${s.id}" onchange="autoSaveNoteSelect(${s.id},this.value)">${opts}</select><input type="text" class="nc" data-id="${s.id}" placeholder="自定义备注" value="${(s.customNote||'').replace(/"/g,'&quot;')}" onblur="autoSaveNoteInput(${s.id},this.value)"></div>${dn?`<div class="current-note-display">📋 ${dn}</div>`:''}</div></div>`;});$('seatsContainer').innerHTML=h;updateStats();updateSeatSelect();}
     function updateStats(){$('statAll').textContent=seats.length;$('statActive').textContent=seats.filter(s=>s.status==='active'||s.status==='paused').length;$('statIdle').textContent=seats.filter(s=>s.status==='idle').length;}
     function updateSeatSelect(){$('resSeatSelect').innerHTML='<option value="">不指定座位</option>'+seats.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');}
-    function init(){
-        try{const p=JSON.parse(localStorage.getItem(STORAGE_KEY));if(Array.isArray(p)&&p.length)seats=p;else throw 0;}catch(e){seats=Array.from({length:36},(_,i)=>createSeat(i+1));save();}
-        // 关键修复：恢复计时器运行状态，基于时间戳重新计算
-        const now=Date.now();
-        seats.forEach(s=>{
-            if(s.running && s.startTimestamp){
-                // 计算从开始到现在的总秒数
-                s.accumulatedSeconds += (now - s.startTimestamp) / 1000;
-                // 更新时间戳为当前时间，让计时器继续运行
-                s.startTimestamp = now;
-                s.status = 'active';
-                // 保持 running = true，计时器继续
-            }
-        });
-        try{usageRecords=JSON.parse(localStorage.getItem(RECORDS_KEY))||[];}catch(e){usageRecords=[];}
-        try{reservations=JSON.parse(localStorage.getItem(RESERVATIONS_KEY))||[];}catch(e){reservations=[];}
-        renderGrid();renderResList();updateSeatSelect();renderPaymentOptions();
-        $('resDateTimeInput').value=new Date().toISOString().slice(0,16);
-        if(displayTimer)clearInterval(displayTimer);
-        displayTimer=setInterval(refreshAll,1000);
-        if(saveTimer)clearInterval(saveTimer);
-        saveTimer=setInterval(save,3000);
-    }
+    function init(){try{const p=JSON.parse(localStorage.getItem(STORAGE_KEY));if(Array.isArray(p)&&p.length)seats=p;else throw 0;}catch(e){seats=Array.from({length:36},(_,i)=>createSeat(i+1));save();}const now=Date.now();seats.forEach(s=>{if(s.running&&s.startTimestamp){s.accumulatedSeconds+=(now-s.startTimestamp)/1000;s.startTimestamp=now;s.status='active';}});try{usageRecords=JSON.parse(localStorage.getItem(RECORDS_KEY))||[];}catch(e){usageRecords=[];}try{reservations=JSON.parse(localStorage.getItem(RESERVATIONS_KEY))||[];}catch(e){reservations=[];}renderGrid();renderResList();updateSeatSelect();renderPaymentOptions();$('resDateTimeInput').value=new Date().toISOString().slice(0,16);if(displayTimer)clearInterval(displayTimer);displayTimer=setInterval(refreshAll,1000);if(saveTimer)clearInterval(saveTimer);saveTimer=setInterval(save,3000);}
     function renderResList(){const c=$('reservationList');if(!reservations.length){c.innerHTML='<div style="text-align:center;padding:20px;color:#999;">暂无预约</div>';return;}const g={};reservations.sort((a,b)=>new Date(a.dateTime)-new Date(b.dateTime));reservations.forEach(r=>{if(!g[r.date])g[r.date]=[];g[r.date].push(r);});let h='';for(const d in g){h+=`<div style="font-weight:bold;margin:12px 0 6px;color:#5e4b3c;">📅 ${d} (${g[d].length}个)</div>`;g[d].forEach(r=>{h+=`<div class="reservation-item"><div class="info"><div>⏰ ${r.time||''} | 👤 ${r.name} | 📞 ${r.phone}</div><div>📍 ${r.seatName} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c;" onclick="delRes(${r.id})">删除</button></div>`;});}c.innerHTML=h;}
     function addRes(){const name=$('resNameInput').value.trim()||'未填写';const phone=$('resPhoneInput').value.trim();const dt=$('resDateTimeInput').value;const seatId=$('resSeatSelect').value?parseInt($('resSeatSelect').value):null;const remark=$('resCustomNoteInput').value.trim()||$('resNoteSelect').value;if(!phone){showToast('⚠️ 请填写电话');return;}if(!dt){showToast('⚠️ 请选择时间');return;}const date=dt.split('T')[0];if(seatId&&reservations.find(r=>r.seatId===seatId&&r.date===date)){showToast('⚠️ 该座位当天已预约');return;}reservations.push({id:Date.now(),name,phone,dateTime:dt,date,time:dt.split('T')[1]||'',seatId,seatName:seatId?(seats.find(s=>s.id===seatId)?.name||''):'不指定',remark,status:'已预约'});localStorage.setItem(RESERVATIONS_KEY,JSON.stringify(reservations));renderResList();$('resNameInput').value='';$('resPhoneInput').value='';$('resCustomNoteInput').value='';showToast('✅ 预约成功');}
     function delRes(id){if(!confirm('确定删除？'))return;reservations=reservations.filter(r=>r.id!==id);localStorage.setItem(RESERVATIONS_KEY,JSON.stringify(reservations));renderResList();}
-    function setup(){$('seatsContainer').onclick=e=>{const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,id=parseInt(b.dataset.id);if(act==='start')startTimer(id);else if(act==='pause')pauseTimer(id);else if(act==='end'){pendingEndSeatId=id;const s=seats.find(x=>x.id===id);$('paymentSeatInfo').textContent=s?`${s.name} · ${fmtTime(getDisplayTime(s))}`:'';selectedPayment=null;document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));$('confirmPaymentBtn').disabled=true;$('paymentModal').classList.remove('hidden');}else if(act==='open')openTable(id);else if(act==='toggle')toggleMode(id);else if(act==='cdown'){pendingCustomSeatId=id;$('customHoursInput').value='1';$('customMinutesInput').value='0';$('customSecondsInput').value='0';updateTotal();$('customTimeModal').classList.remove('hidden');}};$('confirmPaymentBtn').onclick=()=>{if(pendingEndSeatId&&selectedPayment){endWithPayment(pendingEndSeatId,selectedPayment);$('paymentModal').classList.add('hidden');}};$('cancelPaymentBtn').onclick=()=>$('paymentModal').classList.add('hidden');document.querySelectorAll('.stat-card').forEach(c=>c.onclick=()=>{currentFilter=c.dataset.filter;document.querySelectorAll('.stat-card').forEach(x=>x.classList.remove('active'));c.classList.add('active');document.querySelectorAll('.seat-card').forEach(card=>{const s=seats.find(x=>x.id===parseInt(card.dataset.seatId));if(!s)return;card.classList.toggle('hidden',currentFilter==='active'?!(s.status==='active'||s.status==='paused'):currentFilter==='idle'?s.status!=='idle':false);});});document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab==='timer'?'tabTimer':'tabReservation').classList.add('active');});$('addSeatBtn').onclick=addSeat;$('resetAllIdleBtn').onclick=()=>{seats.forEach(s=>{pauseSeat(s);s.status='idle';s.accumulatedSeconds=0;s.startTimeStr='';});save();renderGrid();};$('viewRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];$('recordDateInput').value=d;const recs=usageRecords.filter(r=>r.timestamp.startsWith(d));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';$('recordsModal').classList.remove('hidden');};$('closeRecordsBtn').onclick=()=>$('recordsModal').classList.add('hidden');$('loadRecordsBtn').onclick=()=>{if($('recordDateInput').value){const recs=usageRecords.filter(r=>r.timestamp.startsWith($('recordDateInput').value));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';}};$('exportRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};$('exportDayRecordsBtn').onclick=()=>{const d=$('recordDateInput').value;const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};$('exportReservationsBtn').onclick=()=>{if(!reservations.length){showToast('无预约');return;}const data=[['时间','姓名','电话','座位','备注']];reservations.forEach(r=>data.push([r.dateTime,r.name,r.phone,r.seatName,r.remark]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'预约');XLSX.writeFile(wb,`预约_${new Date().toISOString().split('T')[0]}.xlsx`);};function updateTotal(){const h=parseInt($('customHoursInput').value)||0,m=parseInt($('customMinutesInput').value)||0,s=parseInt($('customSecondsInput').value)||0;$('totalSecondsDisplay').textContent=h*3600+m*60+s;}$('customHoursInput').oninput=updateTotal;$('customMinutesInput').oninput=updateTotal;$('customSecondsInput').oninput=updateTotal;$('cancelCustomBtn').onclick=()=>$('customTimeModal').classList.add('hidden');$('confirmCustomBtn').onclick=()=>{const total=(parseInt($('customHoursInput').value)||0)*3600+(parseInt($('customMinutesInput').value)||0)*60+(parseInt($('customSecondsInput').value)||0);if(total>0&&pendingCustomSeatId){setCountdown(pendingCustomSeatId,total);$('customTimeModal').classList.add('hidden');}};$('addReservationBtn').onclick=addRes;$('clearResFormBtn').onclick=()=>{$('resNameInput').value='';$('resPhoneInput').value='';$('resCustomNoteInput').value='';};document.querySelectorAll('.modal-overlay').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add('hidden');});window.delRes=delRes;window.deleteSeat=deleteSeat;}
+    function setup(){$('seatsContainer').onclick=e=>{const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act,id=parseInt(b.dataset.id);if(act==='start')startTimer(id);else if(act==='pause')pauseTimer(id);else if(act==='end'){pendingEndSeatId=id;const s=seats.find(x=>x.id===id);$('paymentSeatInfo').textContent=s?`${s.name} · ${fmtTime(getDisplayTime(s))}`:'';selectedPayment=null;document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));$('confirmPaymentBtn').disabled=true;$('paymentModal').classList.remove('hidden');}else if(act==='open')openTable(id);else if(act==='toggle')toggleMode(id);else if(act==='cdown'){pendingCustomSeatId=id;$('customHoursInput').value='1';$('customMinutesInput').value='0';$('customSecondsInput').value='0';updateTotal();$('customTimeModal').classList.remove('hidden');}else if(act==='transfer')showTransferModal(id);};$('confirmPaymentBtn').onclick=()=>{if(pendingEndSeatId&&selectedPayment){endWithPayment(pendingEndSeatId,selectedPayment);$('paymentModal').classList.add('hidden');}};$('cancelPaymentBtn').onclick=()=>$('paymentModal').classList.add('hidden');$('confirmTransferBtn').onclick=confirmTransfer;$('cancelTransferBtn').onclick=()=>{$('transferModal').classList.add('hidden');pendingTransferSeatId=null;};document.querySelectorAll('.stat-card').forEach(c=>c.onclick=()=>{currentFilter=c.dataset.filter;document.querySelectorAll('.stat-card').forEach(x=>x.classList.remove('active'));c.classList.add('active');document.querySelectorAll('.seat-card').forEach(card=>{const s=seats.find(x=>x.id===parseInt(card.dataset.seatId));if(!s)return;card.classList.toggle('hidden',currentFilter==='active'?!(s.status==='active'||s.status==='paused'):currentFilter==='idle'?s.status!=='idle':false);});});document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab==='timer'?'tabTimer':'tabReservation').classList.add('active');});$('addSeatBtn').onclick=addSeat;$('resetAllIdleBtn').onclick=()=>{seats.forEach(s=>{pauseSeat(s);s.status='idle';s.accumulatedSeconds=0;s.startTimeStr='';});save();renderGrid();};$('viewRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];$('recordDateInput').value=d;const recs=usageRecords.filter(r=>r.timestamp.startsWith(d));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';$('recordsModal').classList.remove('hidden');};$('closeRecordsBtn').onclick=()=>$('recordsModal').classList.add('hidden');$('loadRecordsBtn').onclick=()=>{if($('recordDateInput').value){const recs=usageRecords.filter(r=>r.timestamp.startsWith($('recordDateInput').value));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';}};$('exportRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};$('exportDayRecordsBtn').onclick=()=>{const d=$('recordDateInput').value;const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};$('exportReservationsBtn').onclick=()=>{if(!reservations.length){showToast('无预约');return;}const data=[['时间','姓名','电话','座位','备注']];reservations.forEach(r=>data.push([r.dateTime,r.name,r.phone,r.seatName,r.remark]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'预约');XLSX.writeFile(wb,`预约_${new Date().toISOString().split('T')[0]}.xlsx`);};function updateTotal(){const h=parseInt($('customHoursInput').value)||0,m=parseInt($('customMinutesInput').value)||0,s=parseInt($('customSecondsInput').value)||0;$('totalSecondsDisplay').textContent=h*3600+m*60+s;}$('customHoursInput').oninput=updateTotal;$('customMinutesInput').oninput=updateTotal;$('customSecondsInput').oninput=updateTotal;$('cancelCustomBtn').onclick=()=>$('customTimeModal').classList.add('hidden');$('confirmCustomBtn').onclick=()=>{const total=(parseInt($('customHoursInput').value)||0)*3600+(parseInt($('customMinutesInput').value)||0)*60+(parseInt($('customSecondsInput').value)||0);if(total>0&&pendingCustomSeatId){setCountdown(pendingCustomSeatId,total);$('customTimeModal').classList.add('hidden');}};$('addReservationBtn').onclick=addRes;$('clearResFormBtn').onclick=()=>{$('resNameInput').value='';$('resPhoneInput').value='';$('resCustomNoteInput').value='';};document.querySelectorAll('.modal-overlay').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add('hidden');});window.delRes=delRes;window.deleteSeat=deleteSeat;}
     init();setup();
     window.addEventListener('beforeunload',()=>{save();});
 })();
