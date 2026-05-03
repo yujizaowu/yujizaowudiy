@@ -28,18 +28,21 @@
         .stat-card.active { background: #5e4b3c; color: #fdf6ef; }
         .stat-number { font-size: 1.4rem; font-weight: 600; min-width: 35px; }
         .seats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-        .seat-card { background: #fefcf9; border-radius: 14px; padding: 12px; border: 1px solid #e2d6cd; }
+        .seat-card { background: #fefcf9; border-radius: 14px; padding: 12px; border: 1px solid #e2d6cd; position: relative; }
         .seat-card.hidden { display: none; }
-        .seat-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .seat-header { display: flex; justify-content: space-between; margin-bottom: 6px; padding-right: 20px; }
         .seat-name { font-weight: 700; font-size: 1rem; }
         .seat-status { font-size: 0.6rem; padding: 2px 6px; border-radius: 20px; background: #ede6df; }
         .status-active { background: #cbd9c0; }
         .status-paused { background: #f3e1c2; }
         .status-idle { background: #e5dfd9; }
+        .start-time-label { font-size: 0.6rem; color: #6b5d4e; text-align: center; margin-bottom: 3px; padding: 3px 0; background: #fdf5e6; border-radius: 10px; font-weight: 500; }
         .timer-display { font-family: 'Courier New', monospace; font-size: 1.4rem; text-align: center; margin: 6px 0; background: #f3ede7; padding: 5px 0; border-radius: 10px; }
         .mode-badge { font-size: 0.6rem; background: #cfc1b6; display: inline-block; padding: 2px 8px; border-radius: 20px; margin: 0 auto 5px; text-align: center; }
         .seat-actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0; }
         .seat-actions .btn { flex: 1 0 35px; padding: 4px 2px; font-size: 0.6rem; }
+        .delete-seat-btn { position: absolute; top: 6px; right: 6px; background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; z-index: 5; padding: 2px 6px; border-radius: 50%; }
+        .delete-seat-btn:hover { color: #e74c3c; background: #fdf5e6; }
         .notes-selector-wrapper { margin-top: 6px; border-top: 1px dashed #d6c9bf; padding-top: 6px; }
         .remark-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
         .remark-row select { flex: 1; min-width: 80px; padding: 5px 8px; border: 1px solid #d6c9bf; border-radius: 16px; font-size: 0.65rem; background: #fffbf8; }
@@ -49,7 +52,7 @@
         .toast-message.show { opacity: 1; }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(2px); }
         .modal-overlay.hidden { display: none !important; }
-        .modal { background: #fefcf9; border-radius: 24px; padding: 20px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal { background: #fefcf9; border-radius: 24px; padding: 20px; max-width: 420px; width: 90%; max-height: 80vh; overflow-y: auto; }
         .modal h3 { margin-bottom: 16px; color: #3b2b24; font-size: 1.1rem; }
         .modal-input-group { margin-bottom: 14px; }
         .modal-input-group label { display: block; margin-bottom: 5px; color: #5f4e43; font-size: 0.8rem; }
@@ -62,7 +65,7 @@
         .payment-option { padding: 12px 8px; border: 2px solid #d6c9bf; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fffbf8; }
         .payment-option.selected { border-color: #5e4b3c; background: #5e4b3c; color: #fdf6ef; }
         .payment-option .payment-icon { font-size: 1.4rem; margin-bottom: 4px; }
-        .payment-option .payment-name { font-size: 0.75rem; font-weight: 500; }
+        .payment-option .payment-name { font-size: 0.7rem; font-weight: 500; }
         .payment-hint { text-align: center; color: #999; font-size: 0.75rem; margin-top: 8px; }
         .reservation-form { background: #fefcf9; border-radius: 14px; padding: 20px; border: 1px solid #e2d6cd; }
         .reservation-form h3 { margin-bottom: 16px; color: #3b2b24; font-size: 1.1rem; }
@@ -81,33 +84,28 @@
 <body>
 <div class="app">
     <div id="toast" class="toast-message"></div>
-
     <div class="header">
         <div class="shop-name-wrapper"><div class="shop-name"><span>与己造物</span><small>· 手作时光</small></div></div>
         <div class="admin-actions">
-            <button class="btn btn-sm" id="addSeatBtn">+座位</button>
-            <span id="seatCountDisplay">36</span>
+            <button class="btn btn-sm" id="addSeatBtn">+ 添加座位</button>
             <button class="btn btn-sm btn-primary" id="resetAllIdleBtn">全部空闲</button>
             <button class="btn btn-sm btn-success" id="viewRecordsBtn">记录</button>
             <button class="btn btn-sm btn-success" id="exportRecordsBtn">导出</button>
         </div>
     </div>
-
     <div class="tabs">
         <button class="tab-btn active" data-tab="timer">⏱️ 计时管理</button>
         <button class="tab-btn" data-tab="reservation">📋 预约管理</button>
     </div>
-
     <div class="tab-content active" id="tabTimer">
         <div class="stats-bar">
-            <div class="stat-card active" data-filter="all"><span class="stat-number" id="statAll">36</span><span>全部</span></div>
+            <div class="stat-card active" data-filter="all"><span class="stat-number" id="statAll">0</span><span>全部</span></div>
             <div class="stat-card" data-filter="active"><span class="stat-number" id="statActive">0</span><span>使用中</span></div>
-            <div class="stat-card" data-filter="idle"><span class="stat-number" id="statIdle">36</span><span>空闲</span></div>
+            <div class="stat-card" data-filter="idle"><span class="stat-number" id="statIdle">0</span><span>空闲</span></div>
         </div>
         <div id="seatsContainer" class="seats-grid"></div>
-        <div class="footer-note"><p>点击「开台」开始计时 · 结束必须选择收款方式</p></div>
+        <div class="footer-note"><p>点击「开始」自动显示开始时间 · 结束必须选择收款方式</p></div>
     </div>
-
     <div class="tab-content" id="tabReservation">
         <div class="two-col">
             <div class="reservation-form">
@@ -116,302 +114,257 @@
                 <div class="modal-input-group"><label>📞 电话 *</label><input type="text" id="resPhoneInput" placeholder="请输入联系电话"></div>
                 <div class="modal-input-group"><label>📅 预约时间 *</label><input type="datetime-local" id="resDateTimeInput"></div>
                 <div class="modal-input-group"><label>📍 座位</label><select id="resSeatSelect"><option value="">不指定座位</option></select></div>
-                <div class="modal-input-group">
-                    <label>📌 备注</label>
-                    <div class="remark-row">
-                        <select id="resNoteSelect">
-                            <option value="抖音">抖音</option>
-                            <option value="快手">快手</option>
-                            <option value="美团">美团</option>
-                            <option value="小红书">小红书</option>
-                            <option value="线下">线下</option>
-                        </select>
-                        <input type="text" id="resCustomNoteInput" placeholder="或直接输入自定义备注">
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-primary" id="addReservationBtn">添加预约</button>
-                    <button class="btn" id="clearResFormBtn">清空</button>
-                </div>
+                <div class="modal-input-group"><label>📌 备注</label><div class="remark-row"><select id="resNoteSelect"><option value="抖音">抖音</option><option value="快手">快手</option><option value="美团">美团</option><option value="小红书">小红书</option><option value="线下">线下</option></select><input type="text" id="resCustomNoteInput" placeholder="或直接输入自定义备注"></div></div>
+                <div class="modal-actions"><button class="btn btn-primary" id="addReservationBtn">添加预约</button><button class="btn" id="clearResFormBtn">清空</button></div>
             </div>
-            <div class="reservation-list">
-                <h3 style="margin-bottom:14px;">预约列表 <button class="btn btn-sm btn-success" id="exportReservationsBtn" style="float:right;">导出</button></h3>
-                <div id="reservationList"></div>
-            </div>
+            <div class="reservation-list"><h3 style="margin-bottom:14px;">预约列表 <button class="btn btn-sm btn-success" id="exportReservationsBtn" style="float:right;">导出</button></h3><div id="reservationList"></div></div>
         </div>
     </div>
-
-    <!-- 倒计时模态框 - 精确到秒 -->
-    <div id="customTimeModal" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>⏱️ 设置倒计时（精确到秒）</h3>
-            <div class="modal-input-group">
-                <label>倒计时时间</label>
-                <div class="time-input-group">
-                    <input type="number" id="customHoursInput" placeholder="时" min="0" value="1" step="1">
-                    <span>时</span>
-                    <input type="number" id="customMinutesInput" placeholder="分" min="0" max="59" value="0" step="1">
-                    <span>分</span>
-                    <input type="number" id="customSecondsInput" placeholder="秒" min="0" max="59" value="0" step="1">
-                    <span>秒</span>
-                </div>
-                <div style="margin-top:8px;font-size:0.7rem;color:#999;">总秒数：<span id="totalSecondsDisplay">3600</span> 秒</div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn" id="cancelCustomBtn">取消</button>
-                <button class="btn btn-primary" id="confirmCustomBtn">确定开始倒计时</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="paymentModal" class="modal-overlay hidden"><div class="modal"><h3>💰 选择收款方式</h3><div id="paymentSeatInfo" style="margin-bottom:12px;color:#5f4e43;"></div><div class="payment-methods"><div class="payment-option" data-payment="抖音团购"><div class="payment-icon">🎵</div><div class="payment-name">抖音团购</div></div><div class="payment-option" data-payment="美团团购"><div class="payment-icon">🍔</div><div class="payment-name">美团团购</div></div><div class="payment-option" data-payment="支付宝"><div class="payment-icon">💙</div><div class="payment-name">支付宝</div></div><div class="payment-option" data-payment="微信"><div class="payment-icon">💚</div><div class="payment-name">微信</div></div></div><div class="payment-hint">👆 请选择一种收款方式</div><div class="modal-actions"><button class="btn" id="cancelPaymentBtn">取消</button><button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button></div></div></div>
+    <div id="customTimeModal" class="modal-overlay hidden"><div class="modal"><h3>⏱️ 设置倒计时（精确到秒）</h3><div class="modal-input-group"><label>倒计时时间</label><div class="time-input-group"><input type="number" id="customHoursInput" placeholder="时" min="0" value="1" step="1"><span>时</span><input type="number" id="customMinutesInput" placeholder="分" min="0" max="59" value="0" step="1"><span>分</span><input type="number" id="customSecondsInput" placeholder="秒" min="0" max="59" value="0" step="1"><span>秒</span></div><div style="margin-top:8px;font-size:0.7rem;color:#999;">总秒数：<span id="totalSecondsDisplay">3600</span> 秒</div></div><div class="modal-actions"><button class="btn" id="cancelCustomBtn">取消</button><button class="btn btn-primary" id="confirmCustomBtn">确定开始倒计时</button></div></div></div>
+    <div id="paymentModal" class="modal-overlay hidden"><div class="modal"><h3>💰 选择收款方式</h3><div id="paymentSeatInfo" style="margin-bottom:12px;color:#5f4e43;"></div><div class="payment-methods" id="paymentOptionsContainer"></div><div class="payment-hint">👆 请选择一种收款方式</div><div class="modal-actions"><button class="btn" id="cancelPaymentBtn">取消</button><button class="btn btn-primary" id="confirmPaymentBtn" disabled>确认结束</button></div></div></div>
     <div id="recordsModal" class="modal-overlay hidden"><div class="modal"><h3>每日使用记录</h3><div style="display:flex;gap:8px;margin:16px 0;"><input type="date" id="recordDateInput" style="flex:1;padding:8px;border-radius:20px;border:1px solid #d6c9bf;"><button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button></div><div class="records-list" id="recordsList"></div><div class="modal-actions"><button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button><button class="btn btn-sm" id="closeRecordsBtn">关闭</button></div></div></div>
 </div>
 
 <script>
 (function(){
     "use strict";
-    const STORAGE_KEY = 'yzw_seats_v13';
-    const RECORDS_KEY = 'yzw_records_v13';
-    const RESERVATIONS_KEY = 'yzw_reservations_v13';
-    const DEFAULT_SEAT_COUNT = 36;
-    const PRESET_NOTES = ['', '抖音全天', '美团全天', '抖音小时', '美团小时'];
-
-    let seats = [], usageRecords = [], reservations = [], globalTimer = null;
+    const STORAGE_KEY = 'yzw_v21';
+    const RECORDS_KEY = 'yzw_rec21';
+    const RESERVATIONS_KEY = 'yzw_res21';
+    const PAYMENT_METHODS = [
+        { name: '抖音团购', icon: '🎵' },
+        { name: '快手团购', icon: '📱' },
+        { name: '美团团购', icon: '🍔' },
+        { name: '支付宝', icon: '💙' },
+        { name: '微信', icon: '💚' }
+    ];
+    const PRESET_NOTES = ['抖音', '美团', '快手', '小红书'];
+    let seats = [], usageRecords = [], reservations = [], displayTimer = null;
     let pendingCustomSeatId = null, pendingEndSeatId = null, selectedPayment = null, currentFilter = 'all';
     const $ = id => document.getElementById(id);
     const toastEl = $('toast');
     function showToast(msg, d = 1500) { toastEl.textContent = msg;
         toastEl.classList.add('show');
         setTimeout(() => toastEl.classList.remove('show'), d); }
+    function createSeat(id, name) { return { id, name: name || (id + '号桌'), status: 'idle', timerMode: 'countup', countdownInitial: 3600, accumulatedSeconds: 0, running: false, startTimestamp: null, startTimeStr: '', notes: '抖音', customNote: '' }; }
 
-    function createDefaultSeat(id) { return { id, name: id + '号桌', status: 'idle', timerMode: 'countup', countdownInitial: 3600, accumulatedSeconds: 0, running: false, startTimestamp: null, notes: '', customNote: '' }; }
-    function loadSeats() { try { const p = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (Array.isArray(p) && p.length) { seats = p; return; } } catch(e) {} seats = Array.from({length: DEFAULT_SEAT_COUNT}, (_, i) => createDefaultSeat(i+1));
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }
-    function loadRecords() { try { usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; } catch(e) { usageRecords = []; } }
-    function loadReservations() { try { reservations = JSON.parse(localStorage.getItem(RESERVATIONS_KEY)) || []; } catch(e) { reservations = []; } }
-    function getSeatIndex(id) { return seats.findIndex(s => s.id === id); }
-    function getCurrentSeconds(seat) { let b = seat.accumulatedSeconds || 0; if (seat.running && seat.startTimestamp) b += (Date.now() - seat.startTimestamp) / 1000; return b; }
-    function formatTime(s) { s = Math.max(0, s); const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60); return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
-    function getTimerText(seat) { return seat.timerMode === 'countdown' ? formatTime(Math.max(0, seat.countdownInitial - getCurrentSeconds(seat))) : formatTime(getCurrentSeconds(seat)); }
-    function stopRunning(seat) { if (seat.running && seat.startTimestamp) { seat.accumulatedSeconds += (Date.now() - seat.startTimestamp) / 1000;
+    function getElapsed(seat) { let base = seat.accumulatedSeconds || 0; if (seat.running && seat.startTimestamp) base += (Date.now() - seat.startTimestamp) / 1000; return base; }
+    function getDisplayTime(seat) { const e = getElapsed(seat); return seat.timerMode === 'countdown' ? Math.max(0, seat.countdownInitial - e) : e; }
+    function fmtTime(s) { s = Math.max(0, Math.floor(s)); const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+
+    function pauseSeat(seat) { if (seat.running && seat.startTimestamp) { seat.accumulatedSeconds += (Date.now() - seat.startTimestamp) / 1000;
             seat.running = false;
             seat.startTimestamp = null; } }
-    function getDisplayNote(seat) { return seat.customNote || seat.notes || ''; }
+    function formatStartTime(d) { return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 开始计时`; }
 
-    function actionOpenTable(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        stopRunning(seats[idx]);
-        seats[idx].status = 'active';
-        seats[idx].accumulatedSeconds = 0;
-        seats[idx].running = false;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        renderAdminGrid(); }
-    function actionStart(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return; if (seats[idx].status === 'idle') { showToast('⚠️ 请先开台'); return; } if (seats[idx].running) return;
-        seats[idx].running = true;
-        seats[idx].startTimestamp = Date.now();
-        seats[idx].status = 'active';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        updateSingleCard(seats[idx]); }
-    function actionPause(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        stopRunning(seats[idx]);
-        seats[idx].status = 'paused';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        updateSingleCard(seats[idx]); }
-    function actionEndWithPayment(seatId, paymentMethod) { const idx = getSeatIndex(seatId); if (idx === -1) return; const seat = seats[idx];
-        stopRunning(seat); const duration = formatTime(seat.accumulatedSeconds);
-        usageRecords.push({ id: Date.now() + Math.random(), seatName: seat.name, action: '结束使用', duration, notes: getDisplayNote(seat), paymentMethod, timestamp: new Date().toISOString() });
-        seat.status = 'idle';
-        seat.accumulatedSeconds = 0;
-        seat.notes = '';
-        seat.customNote = '';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
+    function refreshAllDisplays() { seats.forEach(s => { const el = document.getElementById('timer-' + s.id); if (el) el.textContent = fmtTime(getDisplayTime(s)); if (s.timerMode === 'countdown' && s.running && getDisplayTime(s) <= 0) { pauseSeat(s);
+                s.status = 'paused';
+                renderGrid(); } }); }
+
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }
+
+    function openTable(id) { const s = seats.find(x => x.id === id); if (!s) return;
+        pauseSeat(s);
+        s.status = 'active';
+        s.accumulatedSeconds = 0;
+        s.running = false;
+        s.startTimeStr = '';
+        save();
+        renderGrid(); }
+    function startTimer(id) { const s = seats.find(x => x.id === id); if (!s) return; if (s.status === 'idle') { showToast('⚠️ 请先开台'); return; } if (s.running) return;
+        s.running = true;
+        s.startTimestamp = Date.now();
+        s.startTimeStr = formatStartTime(new Date());
+        s.status = 'active';
+        save();
+        renderGrid();
+        showToast('✅ ' + s.name + ' ' + s.startTimeStr); }
+    function pauseTimer(id) { const s = seats.find(x => x.id === id); if (!s) return;
+        pauseSeat(s);
+        s.status = 'paused';
+        save();
+        renderGrid(); }
+    function endWithPayment(id, method) { const s = seats.find(x => x.id === id); if (!s) return;
+        pauseSeat(s);
+        usageRecords.push({ id: Date.now(), seatName: s.name, duration: fmtTime(s.accumulatedSeconds), notes: s.customNote || s.notes || '', paymentMethod: method, timestamp: new Date().toISOString() });
+        s.status = 'idle';
+        s.accumulatedSeconds = 0;
+        s.startTimeStr = '';
+        s.notes = '抖音';
+        s.customNote = '';
+        save();
         localStorage.setItem(RECORDS_KEY, JSON.stringify(usageRecords));
-        renderAdminGrid(); }
-    function actionReset(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        stopRunning(seats[idx]);
-        seats[idx].accumulatedSeconds = 0;
-        seats[idx].notes = '';
-        seats[idx].customNote = '';
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        updateSingleCard(seats[idx]); }
-    function actionToggleMode(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        stopRunning(seats[idx]);
-        seats[idx].timerMode = seats[idx].timerMode === 'countup' ? 'countdown' : 'countup';
-        seats[idx].accumulatedSeconds = 0;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        updateSingleCard(seats[idx]); }
+        renderGrid(); }
+    function toggleMode(id) { const s = seats.find(x => x.id === id); if (!s) return;
+        pauseSeat(s);
+        s.timerMode = s.timerMode === 'countup' ? 'countdown' : 'countup';
+        s.accumulatedSeconds = 0;
+        s.startTimeStr = '';
+        save();
+        renderGrid(); }
+    function setCountdown(id, totalSec) { const s = seats.find(x => x.id === id); if (!s) return;
+        pauseSeat(s);
+        s.countdownInitial = totalSec;
+        s.timerMode = 'countdown';
+        s.accumulatedSeconds = 0;
+        s.startTimeStr = '';
+        save();
+        renderGrid(); }
+    function addSeat() { const maxId = seats.reduce((max, s) => Math.max(max, s.id), 0); const newSeat = createSeat(maxId + 1, (maxId + 1) + '号桌');
+        seats.push(newSeat);
+        save();
+        renderGrid();
+        showToast('✅ 已添加 ' + newSeat.name); }
+    function deleteSeat(id) { const s = seats.find(x => x.id === id); if (!s) return; if (s.status !== 'idle') { showToast('⚠️ 请先结束使用再删除'); return; } if (!confirm(`确定删除 ${s.name} 吗？`)) return;
+        seats = seats.filter(x => x.id !== id);
+        save();
+        renderGrid();
+        showToast('🗑️ 已删除 ' + s.name); }
 
-    function saveSeatNote(seatId, noteSelect, customNote) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        seats[idx].notes = noteSelect;
-        seats[idx].customNote = customNote.trim();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-        updateSingleCard(seats[idx]); }
-
-    function showPaymentModal(seatId) { const idx = getSeatIndex(seatId); if (idx === -1) return;
-        pendingEndSeatId = seatId;
-        selectedPayment = null;
-        $('paymentSeatInfo').textContent = `${seats[idx].name} · 使用时长: ${formatTime(getCurrentSeconds(seats[idx]))}`;
-        document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-        $('confirmPaymentBtn').disabled = true;
-        $('paymentModal').classList.remove('hidden'); }
-
-    // 更新总秒数显示
-    function updateTotalSeconds() {
-        const h = parseInt($('customHoursInput').value) || 0;
-        const m = parseInt($('customMinutesInput').value) || 0;
-        const s = parseInt($('customSecondsInput').value) || 0;
-        const total = h * 3600 + m * 60 + s;
-        $('totalSecondsDisplay').textContent = total;
-        return total;
+    function renderPaymentOptions() {
+        const container = $('paymentOptionsContainer');
+        if (!container) return;
+        container.innerHTML = PAYMENT_METHODS.map(m => `
+            <div class="payment-option" data-payment="${m.name}">
+                <div class="payment-icon">${m.icon}</div>
+                <div class="payment-name">${m.name}</div>
+            </div>
+        `).join('');
+        container.querySelectorAll('.payment-option').forEach(o => {
+            o.onclick = function() {
+                container.querySelectorAll('.payment-option').forEach(x => x.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedPayment = this.dataset.payment;
+                $('confirmPaymentBtn').disabled = false;
+            };
+        });
     }
 
-    function addReservation() {
-        const name = $('resNameInput').value.trim() || '未填写';
-        const phone = $('resPhoneInput').value.trim();
-        const dateTime = $('resDateTimeInput').value;
-        const seatId = $('resSeatSelect').value ? parseInt($('resSeatSelect').value) : null;
-        const noteSelect = $('resNoteSelect').value;
-        const customNote = $('resCustomNoteInput').value.trim();
-        const remark = customNote || noteSelect;
-        if (!phone) { showToast('⚠️ 请填写电话'); return; }
-        if (!dateTime) { showToast('⚠️ 请选择预约时间'); return; }
-        const resDate = dateTime.split('T')[0];
-        if (seatId) { const existing = reservations.find(r => r.seatId === seatId && r.date === resDate); if (existing) { showToast('⚠️ 该座位在当天已被预约'); return; } }
-        reservations.push({ id: Date.now(), name, phone, dateTime, date: resDate, time: dateTime.split('T')[1] || '', seatId, seatName: seatId ? (seats.find(s => s.id === seatId)?.name || '') : '不指定', remark, status: '已预约' });
-        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
-        renderReservationList();
-        clearReservationForm();
-        showToast('✅ 预约成功 · ' + remark);
-    }
-
-    function clearReservationForm() { $('resNameInput').value = '';
-        $('resPhoneInput').value = '';
-        $('resDateTimeInput').value = new Date().toISOString().slice(0, 16);
-        $('resSeatSelect').value = '';
-        $('resNoteSelect').value = '抖音';
-        $('resCustomNoteInput').value = ''; }
-    function deleteReservation(id) { if (!confirm('确定删除此预约？')) return;
-        reservations = reservations.filter(r => r.id !== id);
-        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
-        renderReservationList();
-        showToast('🗑️ 预约已删除'); }
-
-    function renderReservationList() { const c = $('reservationList'); if (!reservations.length) { c.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">暂无预约</div>'; return; } const g = {};
-        reservations.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-        reservations.forEach(r => { if (!g[r.date]) g[r.date] = [];
-            g[r.date].push(r); }); let h = ''; for (const d in g) { h += `<div style="font-weight:bold;margin:12px 0 6px;color:#5e4b3c;">📅 ${d} (${g[d].length}个)</div>`;
-            g[d].forEach(r => { h += `<div class="reservation-item"><div class="info"><div>⏰ ${r.time||''} | 👤 ${r.name} | 📞 ${r.phone}</div><div>📍 ${r.seatName} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c;" onclick="deleteReservation(${r.id})">删除</button></div>`; }); }
-        c.innerHTML = h; }
-    function updateSeatSelect() { $('resSeatSelect').innerHTML = '<option value="">不指定座位</option>' + seats.map(s => `<option value="${s.id}">${s.name}</option>`).join(''); }
-
-    function updateSingleCard(seat) { const card = document.querySelector(`.seat-card[data-seat-id="${seat.id}"]`); if (!card) return renderAdminGrid(); const sc = seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : (seat.status === 'paused' ? 'status-paused' : 'status-idle'); const st = seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '暂停');
-        card.querySelector('.timer-display').textContent = getTimerText(seat);
-        card.querySelector('.seat-status').textContent = st;
-        card.querySelector('.seat-status').className = 'seat-status ' + sc; }
-
-    function renderAdminGrid() { let h = '';
-        seats.forEach(seat => { const sc = seat.status === 'active' ? (seat.running ? 'status-active' : 'status-paused') : (seat.status === 'paused' ? 'status-paused' : 'status-idle'); const st = seat.status === 'idle' ? '空闲' : (seat.running ? '计时中' : '暂停'); const dn = getDisplayNote(seat); const opts = PRESET_NOTES.map(o => `<option value="${o}" ${seat.notes===o?'selected':''}>${o||'无备注'}</option>`).join('');
-            h += `<div class="seat-card" data-seat-id="${seat.id}"><div class="seat-header"><span class="seat-name">${seat.name}</span><span class="seat-status ${sc}">${st}</span></div><div class="mode-badge">${seat.timerMode==='countdown'?'倒计时':'正计时'}</div><div class="timer-display" id="timer-${seat.id}">${getTimerText(seat)}</div><div class="seat-actions"><button class="btn btn-sm" data-action="start" data-id="${seat.id}">开始</button><button class="btn btn-sm" data-action="pause" data-id="${seat.id}">暂停</button><button class="btn btn-sm" data-action="end" data-id="${seat.id}">结束</button><button class="btn btn-sm" data-action="reset" data-id="${seat.id}">重置</button></div><div class="seat-actions"><button class="btn btn-sm" data-action="openTable" data-id="${seat.id}">开台</button><button class="btn btn-sm" data-action="toggleMode" data-id="${seat.id}">切换</button><button class="btn btn-sm btn-primary" data-action="customCountdown" data-id="${seat.id}">倒计时</button></div><div class="notes-selector-wrapper"><div class="remark-row"><select class="notes-preset" data-id="${seat.id}">${opts}</select><input type="text" class="notes-custom" data-id="${seat.id}" placeholder="或直接输入" value="${(seat.customNote||'').replace(/"/g,'&quot;')}"><button class="btn btn-sm" data-action="saveNote" data-id="${seat.id}" style="flex:0 0 auto;padding:4px 8px;font-size:0.6rem;">保存</button></div>${dn?`<div class="current-note-display">📋 ${dn}</div>`:''}</div></div>`; });
+    function renderGrid() {
+        let h = '';
+        seats.forEach(s => {
+            const sc = s.status === 'active' ? (s.running ? 'status-active' : 'status-paused') : (s.status === 'paused' ? 'status-paused' : 'status-idle');
+            const st = s.status === 'idle' ? '空闲' : (s.running ? '计时中' : '暂停');
+            const dn = s.customNote || s.notes || '';
+            const opts = PRESET_NOTES.map(o => `<option value="${o}" ${s.notes===o?'selected':''}>${o}</option>`).join('');
+            const showStartTime = (s.running || s.status === 'paused') && s.startTimeStr;
+            const stHtml = showStartTime ? `<div class="start-time-label">🕐 ${s.startTimeStr}</div>` : '';
+            h += `<div class="seat-card" data-seat-id="${s.id}">
+                <button class="delete-seat-btn" onclick="event.stopPropagation();deleteSeat(${s.id})" title="删除座位">×</button>
+                <div class="seat-header"><span class="seat-name">${s.name}</span><span class="seat-status ${sc}">${st}</span></div>
+                <div class="mode-badge">${s.timerMode==='countdown'?'倒计时':'正计时'}</div>
+                ${stHtml}
+                <div class="timer-display" id="timer-${s.id}">${fmtTime(getDisplayTime(s))}</div>
+                <div class="seat-actions">
+                    <button class="btn btn-sm" data-act="start" data-id="${s.id}">开始</button>
+                    <button class="btn btn-sm" data-act="pause" data-id="${s.id}">暂停</button>
+                    <button class="btn btn-sm" data-act="end" data-id="${s.id}">结束</button>
+                </div>
+                <div class="seat-actions">
+                    <button class="btn btn-sm" data-act="open" data-id="${s.id}">开台</button>
+                    <button class="btn btn-sm" data-act="toggle" data-id="${s.id}">切换</button>
+                    <button class="btn btn-sm btn-primary" data-act="cdown" data-id="${s.id}">倒计时</button>
+                </div>
+                <div class="notes-selector-wrapper">
+                    <div class="remark-row">
+                        <select class="np" data-id="${s.id}">${opts}</select>
+                        <input type="text" class="nc" data-id="${s.id}" placeholder="或直接输入" value="${(s.customNote||'').replace(/"/g,'&quot;')}">
+                        <button class="btn btn-sm" data-act="savenote" data-id="${s.id}" style="flex:0 0 auto;padding:4px 8px;font-size:0.6rem;">保存</button>
+                    </div>
+                    ${dn?`<div class="current-note-display">📋 ${dn}</div>`:''}
+                </div>
+            </div>`;
+        });
         $('seatsContainer').innerHTML = h;
         updateStats();
-        $('seatCountDisplay').textContent = seats.length;
-        updateSeatSelect(); }
+        updateSeatSelect();
+    }
+
     function updateStats() { $('statAll').textContent = seats.length;
         $('statActive').textContent = seats.filter(s => s.status==='active'||s.status==='paused').length;
         $('statIdle').textContent = seats.filter(s => s.status==='idle').length; }
-    function applyFilter() { document.querySelectorAll('.seat-card').forEach(card => { const s = seats.find(x => x.id===parseInt(card.dataset.seatId)); if(!s) return; let show = true; if(currentFilter==='active') show = s.status==='active'||s.status==='paused'; else if(currentFilter==='idle') show = s.status==='idle';
-            card.classList.toggle('hidden', !show); }); }
-    function showRecords(ds) { const d = ds || new Date().toISOString().split('T')[0];
-        $('recordDateInput').value = d; const recs = usageRecords.filter(r => r.timestamp.startsWith(d));
-        $('recordsList').innerHTML = recs.length ? recs.map(r => `<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''} · ${r.notes||''}</span></div>`).join('') : '<div style="text-align:center;padding:20px;">暂无记录</div>'; }
-    function exportToExcel(ds) { const d = ds || new Date().toISOString().split('T')[0]; const data = [['座位','时长','收款方式','备注','时间']];
-        usageRecords.filter(r => r.timestamp.startsWith(d)).forEach(r => data.push([r.seatName, r.duration, r.paymentMethod||'', r.notes||'', new Date(r.timestamp).toLocaleString()])); const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '记录');
-        XLSX.writeFile(wb, `记录_${d}.xlsx`);
-        showToast('✅ 导出成功'); }
-    function exportReservationsExcel() { if (!reservations.length) { showToast('无预约记录'); return; } const data = [['预约时间','姓名','电话','座位','备注','状态']];
-        reservations.forEach(r => data.push([r.dateTime, r.name, r.phone, r.seatName, r.remark, r.status])); const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), '预约');
-        XLSX.writeFile(wb, `预约_${new Date().toISOString().split('T')[0]}.xlsx`);
-        showToast('✅ 导出成功'); }
+    function updateSeatSelect() { $('resSeatSelect').innerHTML = '<option value="">不指定座位</option>' + seats.map(s => `<option value="${s.id}">${s.name}</option>`).join(''); }
 
-    function setupEvents() {
-        $('seatsContainer').onclick = e => { const btn = e.target.closest('[data-action]'); if (!btn) return; const a = btn.dataset.action,
-                id = parseInt(btn.dataset.id); if (a==='start') actionStart(id); else if (a==='pause') actionPause(id); else if (a==='end') showPaymentModal(id); else if (a==='reset') actionReset(id); else if (a==='openTable') actionOpenTable(id); else if (a==='toggleMode') actionToggleMode(id); else if (a==='customCountdown') { pendingCustomSeatId = id;
-                $('customHoursInput').value = '1';
-                $('customMinutesInput').value = '0';
-                $('customSecondsInput').value = '0';
-                updateTotalSeconds();
-                $('customTimeModal').classList.remove('hidden'); } else if (a==='saveNote') { const pe = document.querySelector(`.notes-preset[data-id="${id}"]`); const ce = document.querySelector(`.notes-custom[data-id="${id}"]`); if (pe && ce) saveSeatNote(id, pe.value, ce.value); } };
-        $('customHoursInput').oninput = updateTotalSeconds;
-        $('customMinutesInput').oninput = updateTotalSeconds;
-        $('customSecondsInput').oninput = updateTotalSeconds;
-        document.querySelectorAll('.stat-card').forEach(c => c.onclick = () => { currentFilter = c.dataset.filter;
-            document.querySelectorAll('.stat-card').forEach(x => x.classList.remove('active'));
-            c.classList.add('active');
-            applyFilter(); });
-        document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            $(b.dataset.tab==='timer'?'tabTimer':'tabReservation').classList.add('active'); });
-        document.querySelectorAll('.payment-option').forEach(o => { o.onclick = () => { document.querySelectorAll('.payment-option').forEach(x => x.classList.remove('selected'));
-                o.classList.add('selected');
-                selectedPayment = o.dataset.payment;
-                $('confirmPaymentBtn').disabled = false; }; });
-        $('confirmPaymentBtn').onclick = () => { if (pendingEndSeatId && selectedPayment) { actionEndWithPayment(pendingEndSeatId, selectedPayment);
-                $('paymentModal').classList.add('hidden'); } };
-        $('cancelPaymentBtn').onclick = () => { $('paymentModal').classList.add('hidden');
-            pendingEndSeatId = null;
-            selectedPayment = null; };
-        $('addSeatBtn').onclick = () => { seats.push(createDefaultSeat(Math.max(...seats.map(s=>s.id))+1));
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-            renderAdminGrid(); };
-        $('resetAllIdleBtn').onclick = () => { seats.forEach(s => { stopRunning(s);
-                s.status='idle';
-                s.accumulatedSeconds=0; });
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-            renderAdminGrid(); };
-        $('viewRecordsBtn').onclick = () => { showRecords(new Date().toISOString().split('T')[0]);
-            $('recordsModal').classList.remove('hidden'); };
-        $('closeRecordsBtn').onclick = () => $('recordsModal').classList.add('hidden');
-        $('loadRecordsBtn').onclick = () => { if ($('recordDateInput').value) showRecords($('recordDateInput').value); };
-        $('exportRecordsBtn').onclick = () => exportToExcel(new Date().toISOString().split('T')[0]);
-        $('exportDayRecordsBtn').onclick = () => exportToExcel($('recordDateInput').value);
-        $('cancelCustomBtn').onclick = () => $('customTimeModal').classList.add('hidden');
-        $('confirmCustomBtn').onclick = () => { const totalSeconds = updateTotalSeconds(); if (totalSeconds > 0 && pendingCustomSeatId) { const idx = getSeatIndex(pendingCustomSeatId); if(idx!==-1){ stopRunning(seats[idx]);
-                    seats[idx].countdownInitial = totalSeconds;
-                    seats[idx].timerMode = 'countdown';
-                    seats[idx].accumulatedSeconds = 0;
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                    renderAdminGrid();
-                    showToast(`⏱️ 倒计时已设为 ${formatTime(totalSeconds)}`); } } $('customTimeModal').classList.add('hidden'); };
-        $('addReservationBtn').onclick = addReservation;
-        $('clearResFormBtn').onclick = clearReservationForm;
-        $('exportReservationsBtn').onclick = exportReservationsExcel;
-        document.querySelectorAll('.modal-overlay').forEach(m => m.onclick = e => { if (e.target===m) m.classList.add('hidden'); });
-        window.deleteReservation = deleteReservation;
+    function init() {
+        try { const p = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (Array.isArray(p) && p.length) seats = p; else throw 0; } catch(e) { seats = Array.from({length: 36}, (_, i) => createSeat(i+1));
+            save(); }
+        seats.forEach(s => { if (s.running) { s.accumulatedSeconds += (Date.now() - (s.startTimestamp||Date.now())) / 1000;
+                s.running = false;
+                s.startTimestamp = null; }
+            if (!s.notes || s.notes === '') s.notes = '抖音'; });
+        try { usageRecords = JSON.parse(localStorage.getItem(RECORDS_KEY)) || []; } catch(e) { usageRecords = []; }
+        try { reservations = JSON.parse(localStorage.getItem(RESERVATIONS_KEY)) || []; } catch(e) { reservations = []; }
+        renderGrid();
+        renderResList();
+        updateSeatSelect();
+        renderPaymentOptions();
+        $('resDateTimeInput').value = new Date().toISOString().slice(0, 16);
+        displayTimer = setInterval(refreshAllDisplays, 1000);
+        setInterval(save, 5000);
     }
 
-    loadSeats();
-    loadRecords();
-    loadReservations();
-    renderAdminGrid();
-    renderReservationList();
-    updateSeatSelect();
-    setupEvents();
-    $('resDateTimeInput').value = new Date().toISOString().slice(0, 16);
+    function renderResList() { const c = $('reservationList'); if (!reservations.length) { c.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">暂无预约</div>'; return; } const g = {};
+        reservations.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        reservations.forEach(r => { if (!g[r.date]) g[r.date] = [];
+            g[r.date].push(r); }); let h = ''; for (const d in g) { h += `<div style="font-weight:bold;margin:12px 0 6px;color:#5e4b3c;">📅 ${d} (${g[d].length}个)</div>`;
+            g[d].forEach(r => { h += `<div class="reservation-item"><div class="info"><div>⏰ ${r.time||''} | 👤 ${r.name} | 📞 ${r.phone}</div><div>📍 ${r.seatName} | <span class="badge">${r.remark}</span></div></div><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c;" onclick="delRes(${r.id})">删除</button></div>`; }); }
+        c.innerHTML = h; }
+    function addRes() { const name = $('resNameInput').value.trim() || '未填写'; const phone = $('resPhoneInput').value.trim(); const dt = $('resDateTimeInput').value; const seatId = $('resSeatSelect').value ? parseInt($('resSeatSelect').value) : null; const remark = $('resCustomNoteInput').value.trim() || $('resNoteSelect').value; if (!phone) { showToast('⚠️ 请填写电话'); return; } if (!dt) { showToast('⚠️ 请选择时间'); return; } const date = dt.split('T')[0]; if (seatId && reservations.find(r => r.seatId === seatId && r.date === date)) { showToast('⚠️ 该座位当天已预约'); return; }
+        reservations.push({ id: Date.now(), name, phone, dateTime: dt, date, time: dt.split('T')[1] || '', seatId, seatName: seatId ? (seats.find(s => s.id === seatId)?.name || '') : '不指定', remark, status: '已预约' });
+        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
+        renderResList();
+        $('resNameInput').value = '';
+        $('resPhoneInput').value = '';
+        $('resCustomNoteInput').value = '';
+        showToast('✅ 预约成功'); }
+    function delRes(id) { if (!confirm('确定删除？')) return;
+        reservations = reservations.filter(r => r.id !== id);
+        localStorage.setItem(RESERVATIONS_KEY, JSON.stringify(reservations));
+        renderResList(); }
 
-    globalTimer = setInterval(() => { seats.forEach(s => { const el = $(`timer-${s.id}`); if(el) el.textContent = getTimerText(s); if(s.timerMode==='countdown' && s.running && s.countdownInitial-getCurrentSeconds(s)<=0){ s.running=false;
-                s.accumulatedSeconds=s.countdownInitial;
-                s.status='paused';
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(seats));
-                renderAdminGrid(); } });
-        updateStats(); }, 200);
-    setInterval(() => { seats.forEach(s => { if(s.running) s.accumulatedSeconds = getCurrentSeconds(s); });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); }, 3000);
-    window.addEventListener('beforeunload', () => { seats.forEach(s => { if(s.running) { s.accumulatedSeconds = getCurrentSeconds(s);
-                s.startTimestamp = Date.now(); } });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(seats)); });
+    function setup() {
+        $('seatsContainer').onclick = e => { const b = e.target.closest('[data-act]'); if (!b) return; const act = b.dataset.act,
+                id = parseInt(b.dataset.id); if (act==='start') startTimer(id); else if (act==='pause') pauseTimer(id); else if (act==='end') { pendingEndSeatId = id; const s = seats.find(x=>x.id===id);
+                $('paymentSeatInfo').textContent = s ? `${s.name} · ${fmtTime(getDisplayTime(s))}` : '';
+                selectedPayment = null;
+                document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));
+                $('confirmPaymentBtn').disabled = true;
+                $('paymentModal').classList.remove('hidden'); } else if (act==='open') openTable(id); else if (act==='toggle') toggleMode(id); else if (act==='cdown') { pendingCustomSeatId = id;
+                $('customHoursInput').value='1';
+                $('customMinutesInput').value='0';
+                $('customSecondsInput').value='0';
+                updateTotal();
+                $('customTimeModal').classList.remove('hidden'); } else if (act==='savenote') { const pe = document.querySelector(`.np[data-id="${id}"]`); const ce = document.querySelector(`.nc[data-id="${id}"]`); if(pe&&ce){ const s=seats.find(x=>x.id===id); if(s){ s.notes=pe.value;
+                        s.customNote=ce.value.trim();
+                        save();
+                        renderGrid(); } } }
+        };
+        $('confirmPaymentBtn').onclick=()=>{if(pendingEndSeatId&&selectedPayment){endWithPayment(pendingEndSeatId,selectedPayment);$('paymentModal').classList.add('hidden');}};
+        $('cancelPaymentBtn').onclick=()=>$('paymentModal').classList.add('hidden');
+        document.querySelectorAll('.stat-card').forEach(c=>c.onclick=()=>{currentFilter=c.dataset.filter;document.querySelectorAll('.stat-card').forEach(x=>x.classList.remove('active'));c.classList.add('active');document.querySelectorAll('.seat-card').forEach(card=>{const s=seats.find(x=>x.id===parseInt(card.dataset.seatId));if(!s)return;card.classList.toggle('hidden',currentFilter==='active'?!(s.status==='active'||s.status==='paused'):currentFilter==='idle'?s.status!=='idle':false);});});
+        document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.tab==='timer'?'tabTimer':'tabReservation').classList.add('active');});
+        $('addSeatBtn').onclick=addSeat;
+        $('resetAllIdleBtn').onclick=()=>{seats.forEach(s=>{pauseSeat(s);s.status='idle';s.accumulatedSeconds=0;s.startTimeStr='';});save();renderGrid();};
+        $('viewRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];$('recordDateInput').value=d;const recs=usageRecords.filter(r=>r.timestamp.startsWith(d));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';$('recordsModal').classList.remove('hidden');};
+        $('closeRecordsBtn').onclick=()=>$('recordsModal').classList.add('hidden');
+        $('loadRecordsBtn').onclick=()=>{if($('recordDateInput').value){const recs=usageRecords.filter(r=>r.timestamp.startsWith($('recordDateInput').value));$('recordsList').innerHTML=recs.length?recs.map(r=>`<div class="record-item"><strong>${r.seatName}</strong> · ${r.duration}<br><span style="color:#999;">${new Date(r.timestamp).toLocaleTimeString()} · ${r.paymentMethod||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;">暂无记录</div>';}};
+        $('exportRecordsBtn').onclick=()=>{const d=new Date().toISOString().split('T')[0];const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};
+        $('exportDayRecordsBtn').onclick=()=>{const d=$('recordDateInput').value;const data=[['座位','时长','收款','备注','时间']];usageRecords.filter(r=>r.timestamp.startsWith(d)).forEach(r=>data.push([r.seatName,r.duration,r.paymentMethod||'',r.notes||'',new Date(r.timestamp).toLocaleString()]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');XLSX.writeFile(wb,`记录_${d}.xlsx`);};
+        $('exportReservationsBtn').onclick=()=>{if(!reservations.length){showToast('无预约');return;}const data=[['时间','姓名','电话','座位','备注']];reservations.forEach(r=>data.push([r.dateTime,r.name,r.phone,r.seatName,r.remark]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'预约');XLSX.writeFile(wb,`预约_${new Date().toISOString().split('T')[0]}.xlsx`);};
+        function updateTotal(){const h=parseInt($('customHoursInput').value)||0,m=parseInt($('customMinutesInput').value)||0,s=parseInt($('customSecondsInput').value)||0;$('totalSecondsDisplay').textContent=h*3600+m*60+s;}
+        $('customHoursInput').oninput=updateTotal;$('customMinutesInput').oninput=updateTotal;$('customSecondsInput').oninput=updateTotal;
+        $('cancelCustomBtn').onclick=()=>$('customTimeModal').classList.add('hidden');
+        $('confirmCustomBtn').onclick=()=>{const total=(parseInt($('customHoursInput').value)||0)*3600+(parseInt($('customMinutesInput').value)||0)*60+(parseInt($('customSecondsInput').value)||0);if(total>0&&pendingCustomSeatId){setCountdown(pendingCustomSeatId,total);$('customTimeModal').classList.add('hidden');showToast(`⏱️ 倒计时 ${fmtTime(total)}`);}};
+        $('addReservationBtn').onclick=addRes;
+        $('clearResFormBtn').onclick=()=>{$('resNameInput').value='';$('resPhoneInput').value='';$('resCustomNoteInput').value='';};
+        document.querySelectorAll('.modal-overlay').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add('hidden');});
+        window.delRes=delRes;
+        window.deleteSeat=deleteSeat;
+    }
+
+    init();
+    setup();
+    window.addEventListener('beforeunload',()=>{seats.forEach(s=>{if(s.running){s.accumulatedSeconds+=(Date.now()-s.startTimestamp)/1000;s.startTimestamp=Date.now();}});save();});
 })();
 </script>
 </body>
