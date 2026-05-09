@@ -9,7 +9,7 @@
         body { font-family: system-ui, 'Microsoft YaHei', 'PingFang SC', Roboto, sans-serif; background: #f7f5f2; color: #2e241f; padding: 12px; min-height: 100vh; }
         .app { max-width: 1800px; margin: 0 auto; }
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-        .shop-name { font-size: 1.4rem; font-weight: 400; letter-spacing: 3px; color: #3b2b24; border-left: 4px solid #b28b6f; padding-left: 14px; }
+        .shop-name { font-size: 1.4rem; font-weight: 400; letter-spacing: 3px; color: #3b2b24; border-left: 4px solid #b28b6f; padding-left: 14px; cursor: pointer; }
         .shop-name small { font-size: 0.85rem; color: #7f6a5c; margin-left: 6px; }
         .admin-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .btn { background: #e3d9d1; border: 1px solid #b8a69a; color: #2e241f; padding: 7px 12px; border-radius: 24px; font-size: 0.8rem; cursor: pointer; font-weight: 500; user-select: none; transition: all 0.15s; white-space: nowrap; }
@@ -62,6 +62,8 @@
         .modal-input-group label { display: block; margin-bottom: 5px; color: #5f4e43; font-size: 0.8rem; }
         .modal-input-group input, .modal-input-group select { width: 100%; padding: 10px 12px; border: 1px solid #d6c9bf; border-radius: 20px; font-size: 0.9rem; background: #fffbf8; }
         .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+        .records-list { margin: 14px 0; max-height: 280px; overflow-y: auto; }
+        .record-item { padding: 7px 10px; border-bottom: 1px solid #e2d6cd; font-size: 0.75rem; }
         .payment-methods { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 14px 0; }
         .payment-option { padding: 12px 8px; border: 2px solid #d6c9bf; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fffbf8; }
         .payment-option.selected { border-color: #5e4b3c; background: #5e4b3c; color: #fdf6ef; }
@@ -75,7 +77,7 @@
 <div class="app">
     <div id="toast" class="toast-message"></div>
     <div class="header">
-        <div class="shop-name"><span>与己造物</span><small>· 手作时光</small></div>
+        <div class="shop-name" id="shopNameDisplay" title="点击修改店名"><span id="shopNameText">与己造物</span><small>· 手作时光</small></div>
         <div class="admin-actions">
             <button class="btn btn-sm" id="addSeatBtn">+ 添加座位</button>
             <button class="btn btn-sm btn-primary" id="resetAllIdleBtn">全部空闲</button>
@@ -115,13 +117,19 @@
     <div id="transferModal" class="modal-overlay hidden">
         <div class="modal"><h3>🔄 转桌</h3><div id="transferInfo" style="margin-bottom:12px;"></div><div class="modal-input-group"><select id="transferTargetSelect"></select></div><div class="modal-actions"><button class="btn" id="cancelTransferBtn">取消</button><button class="btn btn-primary" id="confirmTransferBtn">确认</button></div></div>
     </div>
+    <div id="recordsModal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:500px;"><h3>📊 使用记录</h3><div style="display:flex;gap:8px;margin:16px 0;"><input type="date" id="recordDateInput" style="flex:1;padding:8px;border-radius:20px;border:1px solid #d6c9bf;"><button class="btn btn-sm btn-primary" id="loadRecordsBtn">查看</button></div><div class="records-list" id="recordsList"></div><div class="modal-actions"><button class="btn btn-sm btn-success" id="exportDayRecordsBtn">导出Excel</button><button class="btn btn-sm" id="closeRecordsBtn">关闭</button></div></div>
+    </div>
+    <div id="shopNameModal" class="modal-overlay hidden">
+        <div class="modal"><h3>✏️ 修改店名</h3><div class="modal-input-group"><label>店名</label><input type="text" id="shopNameInput" placeholder="请输入店名"></div><div class="modal-actions"><button class="btn" id="cancelShopNameBtn">取消</button><button class="btn btn-primary" id="saveShopNameBtn">保存</button></div></div>
+    </div>
 </div>
 <script>
 (function(){
-    const SKEY='yzw_v31',RKEY='yzw_rec31';
+    const SKEY='yzw_v32',RKEY='yzw_rec32',NAMEKEY='yzw_shopname';
     const PMS=[{name:'抖音团购',icon:'🎵'},{name:'快手团购',icon:'📱'},{name:'美团团购',icon:'🍔'},{name:'支付宝',icon:'💙'},{name:'微信',icon:'💚'}];
     const NOTES=['','抖音','美团','快手','小红书'];
-    let seats=[],records=[],displayTimer=null,saveTimer=null,selectedSeats=new Set();
+    let seats=[],records=[],displayTimer=null,saveTimer=null,selectedSeats=new Set(),shopName='与己造物';
     let pendingEndId=null,pendingTransferId=null,pendingCustomId=null,selPay=null,curFilter='all',isBatch=false;
     const $=id=>document.getElementById(id);
     function toast(m,d=1500){$('toast').textContent=m;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),d);}
@@ -134,7 +142,7 @@
     function locked(s){return s.run||s.status==='paused';}
     function save(){localStorage.setItem(SKEY,JSON.stringify(seats));}
     function saveRec(){localStorage.setItem(RKEY,JSON.stringify(records));}
-    // 重置座位到空闲状态
+    function saveName(){localStorage.setItem(NAMEKEY,shopName);$('shopNameText').textContent=shopName;document.title=shopName+' · 手工店计时';}
     function resetSeat(s){s.status='idle';s.acc=0;s.run=false;s.ts=null;s.startStr='';s.note='';s.cnote='';s.mode='countup';s.cdInit=3600;}
 
     function refreshUI(){
@@ -194,7 +202,7 @@
     function endWithPay(id,method){const s=seats.find(x=>x.id===id);if(!s)return;pause(s);records.push({id:Date.now(),name:s.name,dur:fmt(s.acc),note:s.cnote||s.note||'',pay:method,time:new Date().toISOString()});resetSeat(s);save();saveRec();refreshUI();}
     function toggleMode(id){const s=seats.find(x=>x.id===id);if(!s||locked(s))return;pause(s);s.mode=s.mode==='countup'?'countdown':'countup';s.acc=0;s.startStr='';save();refreshUI();}
     function setCD(id,sec){const s=seats.find(x=>x.id===id);if(!s||locked(s))return;pause(s);s.cdInit=sec;s.mode='countdown';s.acc=0;s.startStr='';save();refreshUI();}
-    function addSeat(){const mid=seats.reduce((m,s)=>Math.max(m,s.id),0);seats.push(mkSeat(mid+1,(mid+1)+'号桌'));save();refreshUI();}
+    function addSeat(){const mid=seats.reduce((m,s)=>Math.max(m,s.id),0);const name=prompt('请输入座位名称：',(mid+1)+'号桌');if(!name)return;seats.push(mkSeat(mid+1,name));save();refreshUI();}
     function delSeat(id){const s=seats.find(x=>x.id===id);if(!s||s.status!=='idle'){toast('⚠️ 请先结束');return;}if(!confirm('删除？'))return;seats=seats.filter(x=>x.id!==id);save();refreshUI();}
     function transfer(id){const s=seats.find(x=>x.id===id);if(!s||!locked(s)){toast('⚠️ 只有计时中/暂停可转');return;}pendingTransferId=id;$('transferInfo').textContent=`${s.name} · ${fmt(dispTime(s))}`;const sel=$('transferTargetSelect');sel.innerHTML=seats.filter(x=>x.id!==id&&x.status==='idle').map(x=>`<option value="${x.id}">${x.name}</option>`).join('');if(!sel.options.length){toast('⚠️ 无空闲座位');return;}$('transferModal').classList.remove('hidden');}
     function confirmTransfer(){if(!pendingTransferId)return;const ss=seats.find(x=>x.id===pendingTransferId);const tid=parseInt($('transferTargetSelect').value);const ts=seats.find(x=>x.id===tid);if(!ss||!ts||ts.status!=='idle')return;const d={status:ss.status,mode:ss.mode,cdInit:ss.cdInit,acc:ss.acc,run:ss.run,ts:ss.ts,startStr:ss.startStr,note:ss.note,cnote:ss.cnote};resetSeat(ss);Object.assign(ts,d);ts.id=tid;save();$('transferModal').classList.add('hidden');pendingTransferId=null;refreshUI();toast('✅ 转桌成功');}
@@ -213,8 +221,29 @@
         c.querySelectorAll('.payment-option').forEach(o=>o.onclick=function(){c.querySelectorAll('.payment-option').forEach(x=>x.classList.remove('selected'));this.classList.add('selected');selPay=this.dataset.p;$('confirmPaymentBtn').disabled=false;});
     }
 
+    function showRecords(dateStr){
+        const date=dateStr||new Date().toISOString().split('T')[0];
+        $('recordDateInput').value=date;
+        const dayRecords=records.filter(r=>r.time.startsWith(date));
+        $('recordsList').innerHTML=dayRecords.length?dayRecords.map(r=>`<div class="record-item"><strong>${r.name}</strong> · ${r.dur} · ${r.pay||''}<br><span style="color:#999;">${new Date(r.time).toLocaleTimeString()} · ${r.note||''}</span></div>`).join(''):'<div style="text-align:center;padding:20px;color:#999;">暂无记录</div>';
+    }
+
+    function exportExcel(dateStr){
+        const date=dateStr||new Date().toISOString().split('T')[0];
+        const data=[['座位','时长','收款方式','备注','时间']];
+        records.filter(r=>r.time.startsWith(date)).forEach(r=>data.push([r.name,r.dur,r.pay||'',r.note||'',new Date(r.time).toLocaleString()]));
+        if(data.length===1){toast('⚠️ 无数据可导出');return;}
+        const wb=XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'记录');
+        XLSX.writeFile(wb,`${shopName}_记录_${date}.xlsx`);
+        toast('✅ 导出成功');
+    }
+
     function init(){
-        try{const p=JSON.parse(localStorage.getItem(SKEY));if(Array.isArray(p)&&p.length)seats=p;else throw 0;}catch(e){seats=Array.from({length:36},(_,i)=>mkSeat(i+1));save();}
+        shopName=localStorage.getItem(NAMEKEY)||'与己造物';
+        $('shopNameText').textContent=shopName;
+        document.title=shopName+' · 手工店计时';
+        try{const p=JSON.parse(localStorage.getItem(SKEY));if(Array.isArray(p)&&p.length)seats=p;else throw 0;}catch(e){seats=Array.from({length:12},(_,i)=>mkSeat(i+1));save();}
         const now=Date.now();seats.forEach(s=>{if(s.run&&s.ts){s.acc+=(now-s.ts)/1000;s.ts=now;s.status='active';}});
         try{records=JSON.parse(localStorage.getItem(RKEY))||[];}catch(e){records=[];}
         refreshUI();renderPayOpts();
@@ -258,6 +287,15 @@
         $('cancelBatchNoteBtn').onclick=()=>$('batchNoteModal').classList.add('hidden');
         $('addSeatBtn').onclick=addSeat;
         $('resetAllIdleBtn').onclick=()=>{seats.forEach(s=>{pause(s);resetSeat(s);});save();refreshUI();};
+        $('viewRecordsBtn').onclick=()=>{showRecords();$('recordsModal').classList.remove('hidden');};
+        $('closeRecordsBtn').onclick=()=>$('recordsModal').classList.add('hidden');
+        $('loadRecordsBtn').onclick=()=>{if($('recordDateInput').value)showRecords($('recordDateInput').value);};
+        $('exportRecordsBtn').onclick=()=>exportExcel(new Date().toISOString().split('T')[0]);
+        $('exportDayRecordsBtn').onclick=()=>exportExcel($('recordDateInput').value);
+        // 店名修改
+        $('shopNameDisplay').onclick=()=>{$('shopNameInput').value=shopName;$('shopNameModal').classList.remove('hidden');};
+        $('saveShopNameBtn').onclick=()=>{const n=$('shopNameInput').value.trim();if(n){shopName=n;saveName();}$('shopNameModal').classList.add('hidden');};
+        $('cancelShopNameBtn').onclick=()=>$('shopNameModal').classList.add('hidden');
         document.querySelectorAll('.modal-overlay').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add('hidden');});
         document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');});
     }
